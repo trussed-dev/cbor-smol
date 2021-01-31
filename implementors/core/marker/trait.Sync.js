@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["cbor_smol"] = [{"text":"impl&lt;'de&gt; Sync for Deserializer&lt;'de&gt;","synthetic":true,"types":[]},{"text":"impl&lt;'a&gt; Sync for SliceWriter&lt;'a&gt;","synthetic":true,"types":[]},{"text":"impl&lt;W&gt; Sync for Serializer&lt;W&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;W: Sync,&nbsp;</span>","synthetic":true,"types":[]},{"text":"impl Sync for Error","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

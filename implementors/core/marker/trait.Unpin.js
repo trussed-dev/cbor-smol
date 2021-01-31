@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["cbor_smol"] = [{"text":"impl&lt;'de&gt; Unpin for Deserializer&lt;'de&gt;","synthetic":true,"types":[]},{"text":"impl&lt;'a&gt; Unpin for SliceWriter&lt;'a&gt;","synthetic":true,"types":[]},{"text":"impl&lt;W&gt; Unpin for Serializer&lt;W&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;W: Unpin,&nbsp;</span>","synthetic":true,"types":[]},{"text":"impl Unpin for Error","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

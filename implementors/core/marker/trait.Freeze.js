@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["cbor_smol"] = [{"text":"impl&lt;'de&gt; Freeze for Deserializer&lt;'de&gt;","synthetic":true,"types":[]},{"text":"impl&lt;'a&gt; Freeze for SliceWriter&lt;'a&gt;","synthetic":true,"types":[]},{"text":"impl&lt;W&gt; Freeze for Serializer&lt;W&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;W: Freeze,&nbsp;</span>","synthetic":true,"types":[]},{"text":"impl Freeze for Error","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
