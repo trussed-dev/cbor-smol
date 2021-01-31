@@ -791,7 +791,7 @@ mod tests {
 
     // use crate::serde::{cbor_serialize, cbor_serialize2, cbor_deserialize};
     // use crate::serde::{cbor_serialize, cbor_serialize_old, cbor_deserialize};
-    use crate::serde::{cbor_serialize, cbor_deserialize};
+    use crate::{cbor_serialize, cbor_deserialize};
 
     #[test]
     fn de_bool() {
@@ -912,10 +912,10 @@ mod tests {
         let mut buf = [0u8; 64];
 
         let slice = b"thank you postcard!";
-        let bytes = heapless::ByteBuf::<U64>::from_slice(slice).unwrap();
+        let bytes = crate::Bytes::<U64>::try_from_slice(slice).unwrap();
         let ser = cbor_serialize(&bytes, &mut buf).unwrap();
         println!("serialized bytes = {:?}", ser);
-        let de: heapless::ByteBuf::<U64> = from_bytes(&buf).unwrap();
+        let de: crate::Bytes::<U64> = from_bytes(&buf).unwrap();
         println!("deserialized bytes = {:?}", &de);
         assert_eq!(&de, slice);
     }
@@ -934,49 +934,49 @@ mod tests {
         assert_eq!(de, string_slice);
     }
 
-    #[test]
-    fn de_struct() {
-        use crate::ctap2::get_info::CtapOptions;
-        // rk: bool,
-        // up: bool,
-        // #[serde(skip_serializing_if = "Option::is_none")]
-        // uv: Option<bool>,
-        // plat: bool,
-        // #[serde(skip_serializing_if = "Option::is_none")]
-        // client_pin: Option<bool>,
-        // #[serde(skip_serializing_if = "Option::is_none")]
-        // cred_protect: Option<bool>,
+    // #[test]
+    // fn de_struct() {
+    //     use crate::ctap2::get_info::CtapOptions;
+    //     // rk: bool,
+    //     // up: bool,
+    //     // #[serde(skip_serializing_if = "Option::is_none")]
+    //     // uv: Option<bool>,
+    //     // plat: bool,
+    //     // #[serde(skip_serializing_if = "Option::is_none")]
+    //     // client_pin: Option<bool>,
+    //     // #[serde(skip_serializing_if = "Option::is_none")]
+    //     // cred_protect: Option<bool>,
 
-        let options = CtapOptions {
-            rk: false,
-            up: true,
-            uv: None,
-            plat: Some(false),
-            client_pin: Some(true),
-        };
+    //     let options = CtapOptions {
+    //         rk: false,
+    //         up: true,
+    //         uv: None,
+    //         plat: Some(false),
+    //         client_pin: Some(true),
+    //     };
 
-        let mut buf = [0u8; 64];
+    //     let mut buf = [0u8; 64];
 
-        let _n = cbor_serialize(&options, &mut buf);
-        let de: CtapOptions = from_bytes(&buf).unwrap();
-        assert_eq!(de, options);
-    }
+    //     let _n = cbor_serialize(&options, &mut buf);
+    //     let de: CtapOptions = from_bytes(&buf).unwrap();
+    //     assert_eq!(de, options);
+    // }
 
-    #[test]
-    fn de_credential_id() {
-        use heapless::{ByteBuf, consts::{U32, U64}};
-        use serde_indexed::{DeserializeIndexed, SerializeIndexed};
-        #[derive(Clone,Debug,Eq,PartialEq,SerializeIndexed,DeserializeIndexed)]
-        pub struct CredentialInner {
-            pub user_id: ByteBuf<U64>,
-            pub alg: i8,
-            pub seed: ByteBuf<U32>,
-        }
+    // #[test]
+    // fn de_credential_id() {
+    //     use crate::{Bytes, consts::{U32, U64}};
+    //     use serde_indexed::{DeserializeIndexed, SerializeIndexed};
+    //     #[derive(Clone,Debug,Eq,PartialEq,SerializeIndexed,DeserializeIndexed)]
+    //     pub struct CredentialInner {
+    //         pub user_id: Bytes<U64>,
+    //         pub alg: i8,
+    //         pub seed: Bytes<U32>,
+    //     }
 
-        let input = b"\xa3\x00Gnickray\x01&\x02X @7\xbf\xa6\x98j\xb9\x0e8nB\x92\xd8\xf2\x1bK\xef\x92\xe87\xfe2`\x92%\xff\x98jR\xd1\xc8\xc1";
+    //     let input = b"\xa3\x00Gnickray\x01&\x02X @7\xbf\xa6\x98j\xb9\x0e8nB\x92\xd8\xf2\x1bK\xef\x92\xe87\xfe2`\x92%\xff\x98jR\xd1\xc8\xc1";
 
-        let _credential_inner: CredentialInner = from_bytes(input).unwrap();
-    }
+    //     let _credential_inner: CredentialInner = from_bytes(input).unwrap();
+    // }
 
     #[test]
     fn de_enum() {
@@ -1032,12 +1032,12 @@ mod tests {
         assert_eq!(de, e);
     }
 
-    #[test]
-    fn fuzzer_things() {
-        let data: [u8; 2] = [160, 96];
-        type T = crate::webauthn::PublicKeyCredentialUserEntity;
-        cbor_deserialize::<T>(&data).ok();
-    }
+    // #[test]
+    // fn fuzzer_things() {
+    //     let data: [u8; 2] = [160, 96];
+    //     type T = crate::webauthn::PublicKeyCredentialUserEntity;
+    //     cbor_deserialize::<T>(&data).ok();
+    // }
 
     // #[test]
     // fn piv_persistent_state() {

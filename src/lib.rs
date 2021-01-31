@@ -4,7 +4,7 @@
 extern crate delog;
 generate_macros!();
 
-pub use heapless_bytes::{ArrayLength, Bytes as ByteBuf};
+pub use heapless_bytes::{ArrayLength, Bytes, consts};
 
 pub mod de;
 pub mod ser;
@@ -34,7 +34,7 @@ pub fn cbor_serialize<'a, 'b, T: serde::Serialize>(
 
 pub fn cbor_serialize_bytes<'a, 'b, N: ArrayLength<u8>, T: serde::Serialize>(
     object: &'a T,
-    bytes: &'b mut ByteBuf<N>,
+    bytes: &'b mut Bytes<N>,
 ) -> Result<usize> {
     let len_before = bytes.len();
     let mut ser = ser::Serializer::new(bytes);
@@ -45,8 +45,8 @@ pub fn cbor_serialize_bytes<'a, 'b, N: ArrayLength<u8>, T: serde::Serialize>(
 }
 
 
-pub fn cbor_serialize_bytebuf<N: ArrayLength<u8>, T: serde::Serialize>(object: &T) -> Result<ByteBuf<N>> {
-    let mut data = ByteBuf::<N>::new();
+pub fn cbor_serialize_bytebuf<N: ArrayLength<u8>, T: serde::Serialize>(object: &T) -> Result<Bytes<N>> {
+    let mut data = Bytes::<N>::new();
     cbor_serialize_bytes(object, &mut data)?;
     Ok(data)
 }
