@@ -1,6 +1,6 @@
 [package]
 name = "cbor-smol"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Nicolas Stalder <n@stalder.io>"]
 edition = "2018"
 description = "Streamlined serde serializer/deserializer for CBOR"
