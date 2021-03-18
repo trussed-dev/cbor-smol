@@ -22,3 +22,7 @@ serde = { version = "1", default-features = false }
 [dev-dependencies]
 heapless = { version = "0.6", features = ["serde"] }
 serde = { version = "1", default-features = false, features = ["derive"] }
+
+[features]
+log-all = []
+log-none = []
