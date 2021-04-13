@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["cbor_smol"] = [{"text":"impl StructuralPartialEq for Error","synthetic":false,"types":[]}];
+implementors["cbor_smol"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/marker/trait.StructuralPartialEq.html\" title=\"trait core::marker::StructuralPartialEq\">StructuralPartialEq</a> for <a class=\"enum\" href=\"cbor_smol/error/enum.Error.html\" title=\"enum cbor_smol::error::Error\">Error</a>","synthetic":false,"types":["cbor_smol::error::Error"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
