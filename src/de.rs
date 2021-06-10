@@ -907,30 +907,26 @@ mod tests {
 
     #[test]
     fn de_bytes() {
-        use heapless::consts::U64;
-
         let mut buf = [0u8; 64];
 
         let slice = b"thank you postcard!";
-        let bytes = crate::Bytes::<U64>::try_from_slice(slice).unwrap();
+        let bytes = crate::Bytes::<64>::from_slice(slice).unwrap();
         let ser = cbor_serialize(&bytes, &mut buf).unwrap();
         println!("serialized bytes = {:?}", ser);
-        let de: crate::Bytes::<U64> = from_bytes(&buf).unwrap();
+        let de: crate::Bytes::<64> = from_bytes(&buf).unwrap();
         println!("deserialized bytes = {:?}", &de);
         assert_eq!(&de, slice);
     }
 
     #[test]
     fn de_str() {
-        use heapless::consts::U64;
-
         let mut buf = [0u8; 64];
 
         let string_slice = "thank you postcard, for blazing the path 🐝";
-        let mut string = heapless::String::<U64>::new();
+        let mut string = heapless::String::<64>::new();
         string.push_str(string_slice).unwrap();
         let _n = cbor_serialize(&string, &mut buf);
-        let de: heapless::String<U64> = from_bytes(&buf).unwrap();
+        let de: heapless::String<64> = from_bytes(&buf).unwrap();
         assert_eq!(de, string_slice);
     }
 

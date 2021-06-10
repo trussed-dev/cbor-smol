@@ -55,9 +55,7 @@ impl<'a> Writer for SliceWriter<'a> {
     }
 }
 
-impl<'a, N> Writer for &'a mut crate::Bytes<N>
-where
-    N: crate::ArrayLength<u8>,
+impl<'a, const N: usize> Writer for &'a mut crate::Bytes<N>
 {
     type Error = Error;
 
