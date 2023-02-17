@@ -1,8 +1,6 @@
 use serde::Deserialize;
 
-use serde::de::{
-    IntoDeserializer,
-};
+use serde::de::IntoDeserializer;
 
 use super::error::{Error, Result};
 
@@ -36,11 +34,7 @@ where
 
 use core::convert::TryInto;
 
-use serde::de::{
-    self,
-    DeserializeSeed,
-    Visitor,
-};
+use serde::de::{self, DeserializeSeed, Visitor};
 
 /// A structure for deserializing a cbor-smol message.
 pub struct Deserializer<'de> {
@@ -104,24 +98,20 @@ impl<'de> Deserializer<'de> {
     }
 
     // TODO: name something like "one-byte-integer"
-    fn raw_deserialize_u8(&mut self, major: u8) -> Result<u8>
-    {
+    fn raw_deserialize_u8(&mut self, major: u8) -> Result<u8> {
         let additional = self.expect_major(major)?;
 
         match additional {
             byte @ 0..=23 => Ok(byte),
-            24 => {
-                match self.try_take_n(1)?[0] {
-                    0..=23 => Err(Error::DeserializeNonMinimal),
-                    byte => Ok(byte),
-                }
+            24 => match self.try_take_n(1)?[0] {
+                0..=23 => Err(Error::DeserializeNonMinimal),
+                byte => Ok(byte),
             },
             _ => Err(Error::DeserializeBadU8),
         }
     }
 
-    fn raw_deserialize_u16(&mut self, major: u8) -> Result<u16>
-    {
+    fn raw_deserialize_u16(&mut self, major: u8) -> Result<u16> {
         let number = self.raw_deserialize_u32(major)?;
         if number <= u16::max_value() as u32 {
             Ok(number as u16)
@@ -130,38 +120,37 @@ impl<'de> Deserializer<'de> {
         }
     }
 
-    fn raw_deserialize_u32(&mut self, major: u8) -> Result<u32>
-    {
+    fn raw_deserialize_u32(&mut self, major: u8) -> Result<u32> {
         let additional = self.expect_major(major)?;
 
         match additional {
             byte @ 0..=23 => Ok(byte as u32),
-            24 => {
-                match self.try_take_n(1)?[0] {
-                    0..=23 => Err(Error::DeserializeNonMinimal),
-                    byte => Ok(byte as u32),
-                }
+            24 => match self.try_take_n(1)?[0] {
+                0..=23 => Err(Error::DeserializeNonMinimal),
+                byte => Ok(byte as u32),
             },
             25 => {
                 let unsigned = u16::from_be_bytes(
                     self.try_take_n(2)?
-                    .try_into().map_err(|_| Error::InexistentSliceToArrayError)?
+                        .try_into()
+                        .map_err(|_| Error::InexistentSliceToArrayError)?,
                 );
                 match unsigned {
                     0..=255 => Err(Error::DeserializeNonMinimal),
                     unsigned => Ok(unsigned as u32),
                 }
-            },
+            }
             26 => {
                 let unsigned = u32::from_be_bytes(
                     self.try_take_n(4)?
-                    .try_into().map_err(|_| Error::InexistentSliceToArrayError)?
+                        .try_into()
+                        .map_err(|_| Error::InexistentSliceToArrayError)?,
                 );
                 match unsigned {
                     0..=65535 => Err(Error::DeserializeNonMinimal),
                     unsigned => Ok(unsigned as u32),
                 }
-            },
+            }
             _ => Err(Error::DeserializeBadU32),
         }
     }
@@ -195,7 +184,7 @@ impl<'a, 'b: 'a> serde::de::SeqAccess<'b> for SeqAccess<'a, 'b> {
 
     fn next_element_seed<V>(&mut self, seed: V) -> Result<Option<V::Value>>
     where
-        V: DeserializeSeed<'b>
+        V: DeserializeSeed<'b>,
     {
         if self.len > 0 {
             self.len -= 1;
@@ -220,7 +209,7 @@ impl<'a, 'b: 'a> serde::de::MapAccess<'b> for MapAccess<'a, 'b> {
 
     fn next_key_seed<V>(&mut self, seed: V) -> Result<Option<V::Value>>
     where
-        V: DeserializeSeed<'b>
+        V: DeserializeSeed<'b>,
     {
         if self.len > 0 {
             self.len -= 1;
@@ -317,7 +306,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                 } else {
                     Err(Error::DeserializeBadI8)
                 }
-            },
+            }
             1 => {
                 let raw_u8 = self.raw_deserialize_u8(1)?;
                 // if raw_u8 <= 1 + i8::max_value() as u8 {
@@ -326,7 +315,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                 } else {
                     Err(Error::DeserializeBadI8)
                 }
-            },
+            }
             _ => Err(Error::DeserializeBadI8),
         }
     }
@@ -343,7 +332,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                 } else {
                     Err(Error::DeserializeBadI16)
                 }
-            },
+            }
             1 => {
                 let raw = self.raw_deserialize_u16(1)?;
                 if raw <= i16::max_value() as u16 {
@@ -351,7 +340,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                 } else {
                     Err(Error::DeserializeBadI16)
                 }
-            },
+            }
             _ => Err(Error::DeserializeBadI16),
         }
     }
@@ -373,7 +362,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                 } else {
                     Err(Error::DeserializeBadI32)
                 }
-            },
+            }
             _ => Err(Error::DeserializeBadI16),
         }
     }
@@ -503,7 +492,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                 self.consume()?;
                 visitor.visit_unit()
             }
-            _ => Err(Error::DeserializeExpectedNull)
+            _ => Err(Error::DeserializeExpectedNull),
         }
     }
 
@@ -595,7 +584,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     // {
     //     todo!("implement `deserialize_enum`");
     // }
-
 
     // fn parse_enum<V>(&mut self, mut len: usize, visitor: V) -> Result<V::Value>
     // where
@@ -791,7 +779,7 @@ mod tests {
 
     // use crate::serde::{cbor_serialize, cbor_serialize2, cbor_deserialize};
     // use crate::serde::{cbor_serialize, cbor_serialize_old, cbor_deserialize};
-    use crate::{cbor_serialize, cbor_deserialize};
+    use crate::{cbor_deserialize, cbor_serialize};
 
     #[test]
     fn de_bool() {
@@ -829,7 +817,6 @@ mod tests {
         }
     }
 
-
     #[test]
     fn de_u16() {
         let mut buf = [0u8; 64];
@@ -858,7 +845,7 @@ mod tests {
     fn de_u32() {
         let mut buf = [0u8; 64];
 
-        for number in 0..=3*(u16::max_value() as u32) {
+        for number in 0..=3 * (u16::max_value() as u32) {
             println!("testing {}", number);
             let _n = cbor_serialize(&number, &mut buf).unwrap();
             let de: u32 = from_bytes(&buf).unwrap();
@@ -883,7 +870,7 @@ mod tests {
         let de: i32 = from_bytes(ser).unwrap();
         assert_eq!(de, number);
 
-        for number in (3*i16::min_value() as i32)..=3*(i16::max_value() as i32) {
+        for number in (3 * i16::min_value() as i32)..=3 * (i16::max_value() as i32) {
             println!("testing {}", number);
             let ser = cbor_serialize(&number, &mut buf).unwrap();
             let de: i32 = from_bytes(ser).unwrap();
@@ -913,7 +900,7 @@ mod tests {
         let bytes = crate::Bytes::<64>::from_slice(slice).unwrap();
         let ser = cbor_serialize(&bytes, &mut buf).unwrap();
         println!("serialized bytes = {:?}", ser);
-        let de: crate::Bytes::<64> = from_bytes(&buf).unwrap();
+        let de: crate::Bytes<64> = from_bytes(&buf).unwrap();
         println!("deserialized bytes = {:?}", &de);
         assert_eq!(&de, slice);
     }
@@ -976,7 +963,6 @@ mod tests {
 
     #[test]
     fn de_enum() {
-
         let mut buf = [0u8; 64];
         let e = Some(3);
         let ser = cbor_serialize(&e, &mut buf).unwrap();
@@ -984,7 +970,11 @@ mod tests {
         let de: Option<u8> = cbor_deserialize(ser).unwrap();
         assert_eq!(de, e);
         let e: Option<u8> = None;
-        println!("ser({:?}) = {:x?}", &e, cbor_serialize(&e, &mut buf).unwrap());
+        println!(
+            "ser({:?}) = {:x?}",
+            &e,
+            cbor_serialize(&e, &mut buf).unwrap()
+        );
 
         // let mut buf = [0u8; 64];
         // let _n = cbor_serialize(&None, &mut buf).unwrap();
@@ -992,7 +982,7 @@ mod tests {
 
         // use serde_indexed::{DeserializeIndexed, SerializeIndexed};
         use serde::{Deserialize, Serialize};
-        #[derive(Clone,Debug,Eq,PartialEq,Serialize,Deserialize)]
+        #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
         pub enum Enum {
             Alpha(u8),
             // Beta((i32, u32)),
@@ -1008,7 +998,7 @@ mod tests {
         let de: Enum = cbor_deserialize(ser).unwrap();
         assert_eq!(de, e);
 
-        #[derive(Clone,Debug,Eq,PartialEq,Serialize,Deserialize)]
+        #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
         pub enum SimpleEnum {
             // Alpha(u8),
             Alpha(u8),
