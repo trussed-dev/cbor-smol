@@ -248,10 +248,10 @@ impl<'de, 'a> serde::de::VariantAccess<'de> for &'a mut Deserializer<'de> {
 
     fn struct_variant<V: Visitor<'de>>(
         self,
-        fields: &'static [&'static str],
+        _fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value> {
-        serde::de::Deserializer::deserialize_tuple(self, fields.len(), visitor)
+        serde::de::Deserializer::deserialize_map(self, visitor)
     }
 }
 
