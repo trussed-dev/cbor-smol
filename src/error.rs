@@ -98,7 +98,7 @@ impl Display for Error {
                 DeserializeNonMinimal => "Value may be valid, but not encoded in minimal way",
                 SerdeSerCustom => "Serde Serialization Error",
                 SerdeDeCustom => "Serde Deserialization Error",
-                SerdeMissingField => "Serde Missing Required Field"
+                SerdeMissingField => "Serde Missing Required Field",
             }
         )
     }
@@ -132,7 +132,7 @@ impl serde::de::Error for Error {
         //
         // `invalid length 297, expected a sequence`
         //
-        info_now!("deser error: {}",&msg);
+        info_now!("deser error: {}", &msg);
         Error::SerdeDeCustom
     }
     fn missing_field(field: &'static str) -> Self {

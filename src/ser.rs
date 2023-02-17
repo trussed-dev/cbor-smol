@@ -1,6 +1,6 @@
-use serde::Serialize;
-use serde::ser;
 use super::error::{Error, Result};
+use serde::ser;
+use serde::Serialize;
 
 // pub fn to_slice<'a, 'b, T>(value: &'a T, buf: &'b mut [u8]) -> Result<&'b mut [u8]>
 // where
@@ -55,13 +55,12 @@ impl<'a> Writer for SliceWriter<'a> {
     }
 }
 
-impl<'a, const N: usize> Writer for &'a mut crate::Bytes<N>
-{
+impl<'a, const N: usize> Writer for &'a mut crate::Bytes<N> {
     type Error = Error;
 
     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
-        self.extend_from_slice(buf).map_err(
-            |_| Error::SerializeBufferFull(buf.len()))
+        self.extend_from_slice(buf)
+            .map_err(|_| Error::SerializeBufferFull(buf.len()))
     }
 }
 
@@ -73,7 +72,6 @@ pub struct Serializer<W>
 }
 
 impl<W: Writer> Serializer<W> {
-
     #[inline]
     pub fn new(writer: W) -> Self {
         Serializer {
@@ -181,8 +179,7 @@ where
     type SerializeTupleVariant = &'a mut Serializer<W>;
     type SerializeMap = CollectionSerializer<'a, W>;
     type SerializeStruct = &'a mut Serializer<W>;
-    type SerializeStructVariant= &'a mut Serializer<W>;
-
+    type SerializeStructVariant = &'a mut Serializer<W>;
 
     #[inline]
     fn serialize_bool(self, value: bool) -> Result<()> {
@@ -302,18 +299,14 @@ where
         _variant: &'static str,
     ) -> Result<()> {
         // if self.packed {
-            self.serialize_u32(variant_index)
+        self.serialize_u32(variant_index)
         // } else {
         //     self.serialize_str(variant)
         // }
     }
 
     #[inline]
-    fn serialize_newtype_struct<T>(
-        self,
-        _name: &'static str,
-        value: &T,
-    ) -> Result<()>
+    fn serialize_newtype_struct<T>(self, _name: &'static str, value: &T) -> Result<()>
     where
         T: ?Sized + ser::Serialize,
     {
@@ -340,8 +333,8 @@ where
         //     self.write_u64(5, 1u64)?;
         //     variant.serialize(&mut *self)?;
         // } else {
-            self.writer.write_all(&[4 << 5 | 2]).map_err(|e| e.into())?;
-            self.serialize_unit_variant(name, variant_index, variant)?;
+        self.writer.write_all(&[4 << 5 | 2]).map_err(|e| e.into())?;
+        self.serialize_unit_variant(name, variant_index, variant)?;
         // }
         value.serialize(self)
     }
@@ -379,9 +372,9 @@ where
         //     variant.serialize(&mut *self)?;
         //     self.serialize_tuple(len)
         // } else {
-            self.write_u64(4, (len + 1) as u64)?;
-            self.serialize_unit_variant(name, variant_index, variant)?;
-            Ok(self)
+        self.write_u64(4, (len + 1) as u64)?;
+        self.serialize_unit_variant(name, variant_index, variant)?;
+        Ok(self)
         // }
     }
 
@@ -420,7 +413,7 @@ where
         // if self.enum_as_map {
         //     self.write_u64(5, 1u64)?;
         // } else {
-            self.writer.write_all(&[4 << 5 | 2]).map_err(|e| e.into())?;
+        self.writer.write_all(&[4 << 5 | 2]).map_err(|e| e.into())?;
         // }
         self.serialize_unit_variant(name, variant_index, variant)?;
         self.serialize_struct(name, len)
@@ -551,7 +544,7 @@ where
     }
 }
 
-impl<'a, W> ser::SerializeStructVariant for  &'a mut Serializer<W>
+impl<'a, W> ser::SerializeStructVariant for &'a mut Serializer<W>
 where
     W: Writer,
 {
