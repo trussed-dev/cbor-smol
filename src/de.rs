@@ -156,6 +156,51 @@ impl<'de> Deserializer<'de> {
             _ => Err(Error::DeserializeBadU32),
         }
     }
+    fn raw_deserialize_u64(&mut self, major: u8) -> Result<u64> {
+        let additional = self.expect_major(major)?;
+
+        match additional {
+            byte @ 0..=23 => Ok(byte as u64),
+            24 => match self.try_take_n(1)?[0] {
+                0..=23 => Err(Error::DeserializeNonMinimal),
+                byte => Ok(byte as u64),
+            },
+            25 => {
+                let unsigned = u16::from_be_bytes(
+                    self.try_take_n(2)?
+                        .try_into()
+                        .map_err(|_| Error::InexistentSliceToArrayError)?,
+                );
+                match unsigned {
+                    0..=255 => Err(Error::DeserializeNonMinimal),
+                    unsigned => Ok(unsigned as u64),
+                }
+            }
+            26 => {
+                let unsigned = u32::from_be_bytes(
+                    self.try_take_n(4)?
+                        .try_into()
+                        .map_err(|_| Error::InexistentSliceToArrayError)?,
+                );
+                match unsigned {
+                    0..=65535 => Err(Error::DeserializeNonMinimal),
+                    unsigned => Ok(unsigned as u64),
+                }
+            }
+            27 => {
+                let unsigned = u64::from_be_bytes(
+                    self.try_take_n(8)?
+                        .try_into()
+                        .map_err(|_| Error::InexistentSliceToArrayError)?,
+                );
+                match unsigned {
+                    0..=0xFFFFFFFF => Err(Error::DeserializeNonMinimal),
+                    unsigned => Ok(unsigned),
+                }
+            }
+            _ => Err(Error::DeserializeBadU64),
+        }
+    }
 
     // fn try_take_varint(&mut self) -> Result<usize> {
     //     for i in 0..VarintUsize::varint_usize_max() {
@@ -425,7 +470,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        let raw = self.raw_deserialize_u32(MAJOR_POSINT)?;
+        let raw = self.raw_deserialize_u64(MAJOR_POSINT)?;
         visitor.visit_u64(raw as u64)
     }
 
@@ -827,6 +872,31 @@ mod tests {
             println!("testing {}", number);
             let _n = cbor_serialize(&number, &mut buf).unwrap();
             let de: u32 = from_bytes(&buf).unwrap();
+            assert_eq!(de, number);
+        }
+    }
+
+    #[test]
+    fn de_u64() {
+        let mut buf = [0u8; 64];
+
+        let numbers = [
+            0,
+            1,
+            2,
+            3,
+            u16::MAX as u64,
+            u16::MAX as u64 + 1,
+            u32::MAX as u64,
+            u32::MAX as u64 + 1,
+            u64::MAX - 1,
+            u64::MAX,
+        ];
+
+        for number in numbers {
+            println!("testing {}", number);
+            let _n = cbor_serialize(&number, &mut buf).unwrap();
+            let de: u64 = from_bytes(&buf).unwrap();
             assert_eq!(de, number);
         }
     }
