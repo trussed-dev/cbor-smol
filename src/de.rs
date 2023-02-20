@@ -79,10 +79,11 @@ impl<'de> Deserializer<'de> {
         }
     }
 
-    fn consume(&mut self) -> Result<()> {
+    fn consume(&mut self) -> Result<u8> {
         if !self.input.is_empty() {
+            let ret = self.input[0];
             self.input = &self.input[1..];
-            Ok(())
+            Ok(ret)
         } else {
             Err(Error::DeserializeUnexpectedEnd)
         }
@@ -232,19 +233,37 @@ impl<'a, 'b: 'a> serde::de::MapAccess<'b> for MapAccess<'a, 'b> {
     }
 }
 
-impl<'de, 'a> serde::de::VariantAccess<'de> for &'a mut Deserializer<'de> {
+struct EnumAccess<'a, 'b: 'a> {
+    deserializer: &'a mut Deserializer<'b>,
+    variant_len: usize,
+}
+
+impl<'de, 'a> serde::de::VariantAccess<'de> for EnumAccess<'a, 'de> {
     type Error = Error;
 
     fn unit_variant(self) -> Result<()> {
+        if self.variant_len != 0 {
+            return Err(Error::DeserializeBadEnum);
+        }
         Ok(())
     }
 
     fn newtype_variant_seed<V: DeserializeSeed<'de>>(self, seed: V) -> Result<V::Value> {
-        DeserializeSeed::deserialize(seed, self)
+        if 2 != self.variant_len {
+            return Err(Error::DeserializeBadEnum);
+        }
+        DeserializeSeed::deserialize(seed, self.deserializer)
     }
 
     fn tuple_variant<V: Visitor<'de>>(self, len: usize, visitor: V) -> Result<V::Value> {
-        serde::de::Deserializer::deserialize_tuple(self, len, visitor)
+        if len + 1 != self.variant_len {
+            return Err(Error::DeserializeBadEnum);
+        }
+
+        visitor.visit_seq(SeqAccess {
+            deserializer: self.deserializer,
+            len,
+        })
     }
 
     fn struct_variant<V: Visitor<'de>>(
@@ -252,16 +271,19 @@ impl<'de, 'a> serde::de::VariantAccess<'de> for &'a mut Deserializer<'de> {
         _fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value> {
-        serde::de::Deserializer::deserialize_map(self, visitor)
+        if 2 != self.variant_len {
+            return Err(Error::DeserializeBadEnum);
+        }
+        serde::de::Deserializer::deserialize_map(self.deserializer, visitor)
     }
 }
 
-impl<'de, 'a> serde::de::EnumAccess<'de> for &'a mut Deserializer<'de> {
+impl<'de, 'a> serde::de::EnumAccess<'de> for EnumAccess<'a, 'de> {
     type Error = Error;
     type Variant = Self;
 
     fn variant_seed<V: DeserializeSeed<'de>>(self, seed: V) -> Result<(V::Value, Self)> {
-        let discriminant = self.raw_deserialize_u32(0)?;
+        let discriminant = self.deserializer.raw_deserialize_u32(MAJOR_POSINT)?;
         // if discriminant > 0xFFFF_FFFF {
         //     return Err(Error::DeserializeBadEnum);
         // }
@@ -609,72 +631,22 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        const ARRAY_LEN_2: u8 = MAJOR_ARRAY << MAJOR_OFFSET | 2;
-        match self.peek()? {
-            ARRAY_LEN_2 => {
-                self.consume()?;
-                visitor.visit_enum(self)
-                // // self.parse_enum(2, visitor)
-                // let value = visitor.visit_enum(VariantAccess {
-                //     seq: SeqAccess { self, len: &mut 2 },
-                // })?;
-
-                // if len != 0 {
-                //     Err(de.error(ErrorCode::TrailingData))
-                // } else {
-                //     Ok(value)
-                // }
+        match self.peek_major()? {
+            // Data variant
+            MAJOR_ARRAY => {
+                let len = self.raw_deserialize_u32(MAJOR_ARRAY)?;
+                visitor.visit_enum(EnumAccess {
+                    deserializer: self,
+                    variant_len: len as usize,
+                })
             }
-            // _ => Err(Error::DeserializeBadEnum),
-            _ => visitor.visit_enum(self),
+            // Unit variant
+            MAJOR_POSINT => visitor.visit_enum(EnumAccess {
+                deserializer: self,
+                variant_len: 0,
+            }),
+            _ => Err(Error::DeserializeBadMajor),
         }
-
-        //     Some(byte @ 0x80..=0x9f) => {
-        //         if !self.accept_legacy_enums {
-        //             return Err(self.error(ErrorCode::WrongEnumFormat));
-        //         }
-        //         self.consume();
-        //         match byte {
-        //             0x80..=0x97 => self.parse_enum(byte as usize - 0x80, visitor),
-        //             0x98 => {
-        //                 let len = self.parse_u8()?;
-        //                 self.parse_enum(len as usize, visitor)
-        //             }
-        //             0x99 => {
-        //                 let len = self.parse_u16()?;
-        //                 self.parse_enum(len as usize, visitor)
-        //             }
-        //             0x9a => {
-        //                 let len = self.parse_u32()?;
-        //                 self.parse_enum(len as usize, visitor)
-        //             }
-        //             0x9b => {
-        //                 let len = self.parse_u64()?;
-        //                 if len > usize::max_value() as u64 {
-        //                     return Err(self.error(ErrorCode::LengthOutOfRange));
-        //                 }
-        //                 self.parse_enum(len as usize, visitor)
-        //             }
-        //             _ => Err(Error::DeserializeBadEnum),
-        //             // 0x9c..=0x9e => Err(self.error(ErrorCode::UnassignedCode)),
-        //             // 0x9f => self.parse_indefinite_enum(visitor),
-
-        //             // _ => unreachable!(),
-        //         }
-        //     }
-        //     _ => Err(Error::DeserializeBadEnum),
-        //     // Some(0xa1) => {
-        //     //     if !self.accept_standard_enums {
-        //     //         return Err(self.error(ErrorCode::WrongEnumFormat));
-        //     //     }
-        //     //     self.consume();
-        //     //     self.parse_enum_map(visitor)
-        //     // }
-        // }
-        // println!("visiting enum");
-        // let ret = visitor.visit_enum(self);
-        // println!("visited enum");
-        // ret
     }
 
     fn deserialize_identifier<V>(self, visitor: V) -> Result<V::Value>
@@ -984,14 +956,19 @@ mod tests {
         #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
         pub enum Enum {
             Alpha(u8),
-            // Beta((i32, u32)),
-            Beta(i32),
+            Beta((i32, u32)),
+            Gamma { a: i32, b: u32 },
         }
 
         let mut buf = [0u8; 64];
 
-        // let e = Enum::Beta((-42, 7));
-        let e = Enum::Beta(-42);
+        let e = Enum::Beta((-42, 7));
+        let ser = cbor_serialize(&e, &mut buf).unwrap();
+        println!("ser({:?}) = {:?}", &e, ser);
+        let de: Enum = cbor_deserialize(ser).unwrap();
+        assert_eq!(de, e);
+
+        let e = Enum::Gamma { a: -42, b: 7 };
         let ser = cbor_serialize(&e, &mut buf).unwrap();
         println!("ser({:?}) = {:?}", &e, ser);
         let de: Enum = cbor_deserialize(ser).unwrap();
@@ -999,7 +976,6 @@ mod tests {
 
         #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
         pub enum SimpleEnum {
-            // Alpha(u8),
             Alpha(u8),
             Beta,
         }
