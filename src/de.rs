@@ -62,7 +62,7 @@ impl<'de> Deserializer<'de> {
     }
 
     fn peek_major(&mut self) -> Result<u8> {
-        if self.input.len() != 0 {
+        if !self.input.is_empty() {
             let byte = self.input[0];
             Ok(byte >> 5)
         } else {
@@ -71,7 +71,7 @@ impl<'de> Deserializer<'de> {
     }
 
     fn peek(&mut self) -> Result<u8> {
-        if self.input.len() != 0 {
+        if !self.input.is_empty() {
             Ok(self.input[0])
         } else {
             Err(Error::DeserializeUnexpectedEnd)
@@ -79,7 +79,7 @@ impl<'de> Deserializer<'de> {
     }
 
     fn consume(&mut self) -> Result<()> {
-        if self.input.len() != 0 {
+        if !self.input.is_empty() {
             self.input = &self.input[1..];
             Ok(())
         } else {
@@ -148,7 +148,7 @@ impl<'de> Deserializer<'de> {
                 );
                 match unsigned {
                     0..=65535 => Err(Error::DeserializeNonMinimal),
-                    unsigned => Ok(unsigned as u32),
+                    unsigned => Ok(unsigned),
                 }
             }
             _ => Err(Error::DeserializeBadU32),
