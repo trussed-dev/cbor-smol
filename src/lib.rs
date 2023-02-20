@@ -6,6 +6,7 @@ generate_macros!();
 
 pub use heapless_bytes::Bytes;
 
+pub(crate) mod consts;
 pub mod de;
 pub mod error;
 pub mod ser;

@@ -3,6 +3,7 @@ use serde::Deserialize;
 use serde::de::IntoDeserializer;
 
 use super::error::{Error, Result};
+use crate::consts::*;
 
 /// Deserialize a message of type `T` from a byte slice. The unused portion (if any)
 /// of the byte slice is returned for further usage
@@ -64,7 +65,7 @@ impl<'de> Deserializer<'de> {
     fn peek_major(&mut self) -> Result<u8> {
         if !self.input.is_empty() {
             let byte = self.input[0];
-            Ok(byte >> 5)
+            Ok(byte >> MAJOR_OFFSET)
         } else {
             Err(Error::DeserializeUnexpectedEnd)
         }
@@ -89,12 +90,12 @@ impl<'de> Deserializer<'de> {
 
     fn expect_major(&mut self, major: u8) -> Result<u8> {
         let byte = self.try_take_n(1)?[0];
-        if major != (byte >> 5) {
+        if major != (byte >> MAJOR_OFFSET) {
             // logging::info_now!("expecting {}, got {} in byte {}", major, byte >> 5, byte).ok();
             // logging::info_now!("remaining data: {:?}", &self.input).ok();
             return Err(Error::DeserializeBadMajor);
         }
-        Ok(byte & ((1 << 5) - 1))
+        Ok(byte & ((1 << MAJOR_OFFSET) - 1))
     }
 
     // TODO: name something like "one-byte-integer"
@@ -287,8 +288,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         let val = match self.try_take_n(1)?[0] {
-            0xf4 => false,
-            0xf5 => true,
+            VALUE_FALSE => false,
+            VALUE_TRUE => true,
             _ => return Err(Error::DeserializeBadBool),
         };
         visitor.visit_bool(val)
@@ -299,7 +300,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         match self.peek_major()? {
-            0 => {
+            MAJOR_POSINT => {
                 let raw_u8 = self.raw_deserialize_u8(0)?;
                 if raw_u8 <= i8::max_value() as u8 {
                     visitor.visit_i8(raw_u8 as i8)
@@ -307,7 +308,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                     Err(Error::DeserializeBadI8)
                 }
             }
-            1 => {
+            MAJOR_NEGINT => {
                 let raw_u8 = self.raw_deserialize_u8(1)?;
                 // if raw_u8 <= 1 + i8::max_value() as u8 {
                 if raw_u8 <= 128 {
@@ -325,7 +326,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         match self.peek_major()? {
-            0 => {
+            MAJOR_POSINT => {
                 let raw = self.raw_deserialize_u16(0)?;
                 if raw <= i16::max_value() as u16 {
                     visitor.visit_i16(raw as i16)
@@ -333,7 +334,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                     Err(Error::DeserializeBadI16)
                 }
             }
-            1 => {
+            MAJOR_NEGINT => {
                 let raw = self.raw_deserialize_u16(1)?;
                 if raw <= i16::max_value() as u16 {
                     visitor.visit_i16(-1 - (raw as i16))
@@ -354,7 +355,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             major @ 0..=1 => {
                 let raw = self.raw_deserialize_u32(major)?;
                 if raw <= i32::max_value() as u32 {
-                    if major == 0 {
+                    if major == MAJOR_POSINT {
                         visitor.visit_i32(raw as i32)
                     } else {
                         visitor.visit_i32(-1 - (raw as i32))
@@ -378,7 +379,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        let raw = self.raw_deserialize_u8(0)?;
+        let raw = self.raw_deserialize_u8(MAJOR_POSINT)?;
         visitor.visit_u8(raw)
     }
 
@@ -386,7 +387,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        let raw = self.raw_deserialize_u16(0)?;
+        let raw = self.raw_deserialize_u16(MAJOR_POSINT)?;
         visitor.visit_u16(raw)
     }
 
@@ -394,7 +395,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        let raw = self.raw_deserialize_u32(0)?;
+        let raw = self.raw_deserialize_u32(MAJOR_POSINT)?;
         visitor.visit_u32(raw)
     }
 
@@ -402,7 +403,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        let raw = self.raw_deserialize_u32(0)?;
+        let raw = self.raw_deserialize_u32(MAJOR_POSINT)?;
         visitor.visit_u64(raw as u64)
     }
 
@@ -439,7 +440,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         // major type 2: "byte string"
-        let length = self.raw_deserialize_u32(2)? as usize;
+        let length = self.raw_deserialize_u32(MAJOR_BYTES)? as usize;
         let bytes: &'de [u8] = self.try_take_n(length)?;
         visitor.visit_borrowed_bytes(bytes)
     }
@@ -456,7 +457,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         // major type 3: "text string"
-        let length = self.raw_deserialize_u32(3)? as usize;
+        let length = self.raw_deserialize_u32(MAJOR_STR)? as usize;
         let bytes: &'de [u8] = self.try_take_n(length)?;
         let string_slice = core::str::from_utf8(bytes).map_err(|_| Error::DeserializeBadUtf8)?;
         visitor.visit_borrowed_str(string_slice)
@@ -488,7 +489,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         match self.peek()? {
-            0xf6 => {
+            VALUE_NULL => {
                 self.consume()?;
                 visitor.visit_unit()
             }
@@ -515,8 +516,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // major type 4: "array"
-        let len = self.raw_deserialize_u32(4)? as usize;
+        let len = self.raw_deserialize_u32(MAJOR_ARRAY)? as usize;
 
         visitor.visit_seq(SeqAccess {
             deserializer: self,
@@ -528,8 +528,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // major type 4: "array"
-        let len = self.raw_deserialize_u32(4)? as usize;
+        let len = self.raw_deserialize_u32(MAJOR_ARRAY)? as usize;
         visitor.visit_seq(SeqAccess {
             deserializer: self,
             len,
@@ -552,8 +551,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // major type 5: "map"
-        let len = self.raw_deserialize_u32(5)? as usize;
+        let len = self.raw_deserialize_u32(MAJOR_MAP)? as usize;
 
         visitor.visit_map(MapAccess {
             deserializer: self,
@@ -611,8 +609,9 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
+        const ARRAY_LEN_2: u8 = MAJOR_ARRAY << MAJOR_OFFSET | 2;
         match self.peek()? {
-            0x82 => {
+            ARRAY_LEN_2 => {
                 self.consume()?;
                 visitor.visit_enum(self)
                 // // self.parse_enum(2, visitor)
