@@ -701,8 +701,17 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // Ignore extra fields/options
-        visitor.visit_none()
+        match self.peek_major()? {
+            0 => self.deserialize_u32(visitor),
+            1 => self.deserialize_i32(visitor),
+            2 => self.deserialize_bytes(visitor),
+            3 => self.deserialize_str(visitor),
+            4 => self.deserialize_seq(visitor),
+            5 => self.deserialize_map(visitor),
+            6 => Err(Error::WontImplement), // I think?
+            7 => self.deserialize_f32(visitor),
+            _ => Err(Error::DeserializeBadMajor),
+        }
     }
 }
 
@@ -1026,6 +1035,32 @@ mod tests {
         println!("ser({:?}) = {:?}", &e, ser);
         let de: SimpleEnum = cbor_deserialize(ser).unwrap();
         assert_eq!(de, e);
+    }
+
+    #[test]
+    fn de_struct_with_extra_fields() {
+        use serde::{Deserialize, Serialize};
+        #[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
+        struct Struct {
+            a: u8,
+            b: i16,
+        }
+
+        #[derive(Debug, Serialize)]
+        struct SuperStruct {
+            a: u8,
+            c: Struct,
+            b: i16,
+        }
+
+        let mut buf = [0u8; 64];
+        let base = Struct { a: 22, b: -161 };
+        let sup = SuperStruct { a: 22, b: -161, c: base.clone() };
+
+        let ser = cbor_serialize(&sup, &mut buf).unwrap();
+        let de: Struct = cbor_deserialize(&ser).unwrap();
+
+        assert_eq!(de, base);
     }
 
     // #[test]
