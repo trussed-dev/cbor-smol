@@ -229,9 +229,12 @@ impl<'de> Deserializer<'de> {
         Ok(())
     }
 
-    fn ignore_array(&mut self, major: u8, mult: u32) -> Result<()> {
-        let length = self.raw_deserialize_u32(major)?;
-        for _ in 0..length * mult {
+    fn ignore_array(&mut self, major: u8, mult: usize) -> Result<()> {
+        let length = self.raw_deserialize_u32(major)? as usize;
+        let Some(real_length) = length.checked_mul(mult) else {
+            return Err(Error::InexistentSliceToArrayError);
+        };
+        for _ in 0..real_length {
             self.ignore()?;
         }
         Ok(())

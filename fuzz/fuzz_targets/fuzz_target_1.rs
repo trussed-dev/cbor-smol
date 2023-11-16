@@ -12,8 +12,7 @@ enum AllEnums {
     U16(u16),
     I32(i32),
     U32(u32),
-    // Not implemented
-    // I64(i64),
+    I64(i64),
     U64(u64),
     Struct(Struct),
     Array([Struct; 4]),
