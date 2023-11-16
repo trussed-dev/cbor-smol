@@ -42,6 +42,8 @@ pub enum Error {
     DeserializeBadI16,
     /// Expected a i32, was too large
     DeserializeBadI32,
+    /// Expected a i64, was too large
+    DeserializeBadI64,
     /// Expected a u8
     DeserializeBadU8,
     /// Expected a u16
@@ -91,6 +93,7 @@ impl Display for Error {
                 DeserializeBadI8 => "Expected a i8",
                 DeserializeBadI16 => "Expected a i16",
                 DeserializeBadI32 => "Expected a i32",
+                DeserializeBadI64 => "Expected a i64",
                 DeserializeBadMajor => "Expected a different major type",
                 DeserializeBadU8 => "Expected a u8",
                 DeserializeBadU16 => "Expected a u16",
