@@ -202,6 +202,80 @@ impl<'de> Deserializer<'de> {
         }
     }
 
+    fn ignore_int(&mut self, major: u8) -> Result<()> {
+        let additional = self.expect_major(major)?;
+        match additional {
+            0..=23 => {}
+            24 => {
+                self.try_take_n(1)?;
+            }
+            25 => {
+                self.try_take_n(2)?;
+            }
+            26 => {
+                self.try_take_n(4)?;
+            }
+            27 => {
+                self.try_take_n(8)?;
+            }
+            _ => return Err(Error::DeserializeBadU16),
+        };
+        Ok(())
+    }
+
+    fn ignore_bytes(&mut self, major: u8) -> Result<()> {
+        let length = self.raw_deserialize_u32(major)? as usize;
+        self.try_take_n(length)?;
+        Ok(())
+    }
+
+    fn ignore_array(&mut self, major: u8, mult: u32) -> Result<()> {
+        let length = self.raw_deserialize_u32(major)?;
+        for _ in 0..length * mult {
+            self.ignore()?;
+        }
+        Ok(())
+    }
+
+    fn ignore_float(&mut self) -> Result<()> {
+        let additional = self.expect_major(7)?;
+        match additional {
+            0..=23 => {}
+            24 => {
+                self.try_take_n(1)?;
+            }
+            25 => {
+                self.try_take_n(2)?;
+            }
+            26 => {
+                self.try_take_n(4)?;
+            }
+            27 => {
+                self.try_take_n(8)?;
+            }
+            _ => return Err(Error::DeserializeBadMajor),
+        };
+        Ok(())
+    }
+
+    fn ignore(&mut self) -> Result<()> {
+        match self.peek_major()? {
+            0 => self.ignore_int(0)?,
+            1 => self.ignore_int(1)?,
+            2 => self.ignore_bytes(2)?,
+            3 => self.ignore_bytes(3)?,
+            4 => self.ignore_array(4, 1)?,
+            5 => self.ignore_array(5, 2)?,
+            6 => {
+                self.ignore_int(6)?;
+                self.ignore()?;
+            }
+            7 => self.ignore_float()?,
+            _ => return Err(Error::DeserializeBadMajor),
+        }
+        Ok(())
+    }
+
     // fn try_take_varint(&mut self) -> Result<usize> {
     //     for i in 0..VarintUsize::varint_usize_max() {
     //         let val = self.input.get(i).ok_or(Error::DeserializeUnexpectedEnd)?;
@@ -435,11 +509,26 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         }
     }
 
-    fn deserialize_i64<V>(self, _visitor: V) -> Result<V::Value>
+    fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        Err(Error::NotYetImplemented)
+        match self.peek_major()? {
+            // TODO: figure out if this is BAAAAD for size or speed
+            major @ 0..=1 => {
+                let raw = self.raw_deserialize_u64(major)?;
+                if raw <= i64::max_value() as u64 {
+                    if major == MAJOR_POSINT {
+                        visitor.visit_i64(raw as i64)
+                    } else {
+                        visitor.visit_i64(-1 - (raw as i64))
+                    }
+                } else {
+                    Err(Error::DeserializeBadI64)
+                }
+            }
+            _ => Err(Error::DeserializeBadI16),
+        }
     }
 
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value>
@@ -706,6 +795,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         // Ignore extra fields/options
+        self.ignore()?;
         visitor.visit_none()
     }
 }
@@ -790,6 +880,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
 #[cfg(test)]
 mod tests {
+
     // use super::*;
     use super::from_bytes;
 
@@ -1061,6 +1152,100 @@ mod tests {
         println!("ser({:?}) = {:?}", &e, ser);
         let de: SimpleEnum = cbor_deserialize(ser).unwrap();
         assert_eq!(de, e);
+    }
+
+    #[test]
+    fn de_ignored_any() {
+        use serde::de::IgnoredAny;
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
+        pub struct ValOuter<'a> {
+            inner: Outer<'a>,
+            val: &'a str,
+        }
+        #[derive(Deserialize)]
+        pub struct ValIgnored<'a> {
+            #[allow(unused)]
+            inner: IgnoredAny,
+            val: &'a str,
+        }
+
+        #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
+        pub struct Inner<'a> {
+            u8: u8,
+            u16: u16,
+            u32: u32,
+            u64: u64,
+            i8: i8,
+            i16: i16,
+            i32: i32,
+            i64: i64,
+            str: &'a str,
+            option: Option<&'a str>,
+            #[serde(with = "serde_bytes")]
+            bytes: &'a [u8],
+            unit: (),
+        }
+        #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
+        pub struct Outer<'a> {
+            u8: u8,
+            u16: u16,
+            u32: u32,
+            u64: u64,
+            i8: i8,
+            i16: i16,
+            i32: i32,
+            i64: i64,
+            str: &'a str,
+            #[serde(with = "serde_bytes")]
+            bytes: &'a [u8],
+            unit: (),
+            option: Option<&'a str>,
+            nested: Inner<'a>,
+        }
+
+        let mut buf = [0; 1024];
+        let val = Outer {
+            u8: u8::MAX,
+            u16: u16::MAX,
+            u32: u32::MAX,
+            u64: u64::MAX,
+            i8: i8::MIN,
+            i16: i16::MIN,
+            i32: i32::MIN,
+            i64: i64::MIN,
+            str: "string",
+            bytes: b"bytes",
+            unit: (),
+            option: Some("option"),
+            nested: Inner {
+                u8: 0,
+                u16: 0,
+                u32: 0,
+                u64: 0,
+                i8: i8::MIN,
+                i16: i16::MIN,
+                i32: i32::MIN,
+                i64: i64::MIN,
+                str: "",
+                option: None,
+                bytes: b"",
+                unit: (),
+            },
+        };
+        let ser = cbor_serialize(&val, &mut buf).unwrap();
+        let _: IgnoredAny = cbor_deserialize(ser).unwrap();
+
+        let val = ValOuter {
+            inner: val,
+            val: "value",
+        };
+        let ser = cbor_serialize(&val, &mut buf).unwrap();
+        let de: ValOuter = cbor_deserialize(ser).unwrap();
+        assert_eq!(val, de);
+        let de: ValIgnored = cbor_deserialize(ser).unwrap();
+        assert_eq!(de.val, "value");
     }
 
     // #[test]
