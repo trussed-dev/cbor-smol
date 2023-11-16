@@ -262,18 +262,17 @@ impl<'de> Deserializer<'de> {
     }
 
     fn ignore(&mut self) -> Result<()> {
-        match self.peek_major()? {
-            0 => self.ignore_int(0)?,
-            1 => self.ignore_int(1)?,
-            2 => self.ignore_bytes(2)?,
-            3 => self.ignore_bytes(3)?,
-            4 => self.ignore_array(4, 1)?,
-            5 => self.ignore_array(5, 2)?,
+        let major = self.peek_major()?;
+        match major {
+            MAJOR_POSINT | MAJOR_NEGINT => self.ignore_int(major)?,
+            MAJOR_BYTES | MAJOR_STR => self.ignore_bytes(major)?,
+            MAJOR_ARRAY => self.ignore_array(MAJOR_ARRAY, 1)?,
+            MAJOR_MAP => self.ignore_array(MAJOR_MAP, 2)?,
             6 => {
                 self.ignore_int(6)?;
                 self.ignore()?;
             }
-            7 => self.ignore_float()?,
+            MAJOR_FLOAT => self.ignore_float()?,
             _ => return Err(Error::DeserializeBadMajor),
         }
         Ok(())

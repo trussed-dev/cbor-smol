@@ -7,6 +7,7 @@ pub const MAJOR_STR: u8 = 3;
 pub const MAJOR_ARRAY: u8 = 4;
 pub const MAJOR_MAP: u8 = 5;
 pub const MAJOR_SIMPLE: u8 = 7;
+pub const MAJOR_FLOAT: u8 = 7;
 
 pub const SIMPLE_FALSE: u8 = 20;
 pub const SIMPLE_TRUE: u8 = 21;
