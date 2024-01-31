@@ -597,10 +597,23 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // major type 2: "byte string"
-        let length = self.raw_deserialize_u32(MAJOR_BYTES)? as usize;
-        let bytes: &'de [u8] = self.try_take_n(length)?;
-        visitor.visit_borrowed_bytes(bytes)
+        let major = self.peek_major()?;
+        match major {
+            MAJOR_ARRAY => {
+                let len = self.raw_deserialize_u32(MAJOR_ARRAY)?;
+                visitor.visit_seq(SeqAccess {
+                    deserializer: self,
+                    len: len as usize,
+                })
+            }
+            MAJOR_BYTES => {
+                // major type 2: "byte string"
+                let length = self.raw_deserialize_u32(MAJOR_BYTES)? as usize;
+                let bytes: &'de [u8] = self.try_take_n(length)?;
+                visitor.visit_borrowed_bytes(bytes)
+            }
+            _ => Err(Error::DeserializeBadMajor),
+        }
     }
 
     fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value>
