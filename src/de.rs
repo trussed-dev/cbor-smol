@@ -803,7 +803,13 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        self.deserialize_str(visitor)
+        let major = self.peek_major()?;
+        match major {
+            MAJOR_STR => self.deserialize_str(visitor),
+            MAJOR_POSINT => self.deserialize_u64(visitor),
+            MAJOR_BYTES => self.deserialize_bytes(visitor),
+            _ => Err(Error::DeserializeBadMajor),
+        }
     }
 
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value>
