@@ -805,9 +805,16 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     {
         let major = self.peek_major()?;
         match major {
-            MAJOR_STR => self.deserialize_str(visitor),
+            MAJOR_BYTES | MAJOR_STR => {
+                // Rust identifiers are always valid UTF-8 so we can assume that bytes are
+                // UTF-8-encoded strings.  This has the benefit that we only need a mapping from
+                // strings to fields (and the mapping from bytes to fields can be optimized out).
+                let length = self.raw_deserialize_u32(major)? as usize;
+                let bytes: &'de [u8] = self.try_take_n(length)?;
+                let string_slice = core::str::from_utf8(bytes).map_err(|_| Error::DeserializeBadUtf8)?;
+                visitor.visit_borrowed_str(string_slice)
+            }
             MAJOR_POSINT => self.deserialize_u64(visitor),
-            MAJOR_BYTES => self.deserialize_bytes(visitor),
             _ => Err(Error::DeserializeBadMajor),
         }
     }
