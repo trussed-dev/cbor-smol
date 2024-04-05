@@ -696,6 +696,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         })
     }
 
+    #[inline(never)]
     fn deserialize_tuple<V>(self, _len: usize, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
@@ -719,6 +720,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         self.deserialize_tuple(len, visitor)
     }
 
+    #[inline(never)]
     fn deserialize_map<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
