@@ -25,6 +25,7 @@ serde = { version = "1", default-features = false, features = ["derive"] }
 serde_bytes = "0.11.12"
 
 [features]
+bytes-from-array = []
 log-all = []
 log-none = []
 log-info = []
