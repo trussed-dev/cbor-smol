@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"cbor_smol":[["impl&lt;'a, W&gt; <a class=\"trait\" href=\"https://docs.rs/serde/1.0.210/serde/ser/trait.SerializeStruct.html\" title=\"trait serde::ser::SerializeStruct\">SerializeStruct</a> for &amp;'a mut <a class=\"struct\" href=\"cbor_smol/ser/struct.Serializer.html\" title=\"struct cbor_smol::ser::Serializer\">Serializer</a>&lt;W&gt;<div class=\"where\">where\n    W: <a class=\"trait\" href=\"cbor_smol/ser/trait.Writer.html\" title=\"trait cbor_smol::ser::Writer\">Writer</a>,</div>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
