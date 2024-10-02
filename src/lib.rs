@@ -17,7 +17,7 @@ pub use error::{Error, Result};
 // pub use de::take_from_bytes;
 
 // kudos to postcard, this is much nicer than returning size
-pub fn cbor_serialize<'a, T: serde::Serialize>(
+pub fn cbor_serialize<'a, T: ?Sized + serde::Serialize>(
     object: &T,
     buffer: &'a mut [u8],
 ) -> Result<&'a [u8]> {
@@ -33,7 +33,7 @@ pub fn cbor_serialize<'a, T: serde::Serialize>(
 }
 
 /// Append serialization of object to existing bytes, returning length of serialized object.
-pub fn cbor_serialize_extending_bytes<T: serde::Serialize, const N: usize>(
+pub fn cbor_serialize_extending_bytes<T: ?Sized + serde::Serialize, const N: usize>(
     object: &T,
     bytes: &mut Bytes<N>,
 ) -> Result<usize> {
@@ -46,7 +46,9 @@ pub fn cbor_serialize_extending_bytes<T: serde::Serialize, const N: usize>(
 }
 
 /// Serialize object into newly allocated Bytes.
-pub fn cbor_serialize_bytes<T: serde::Serialize, const N: usize>(object: &T) -> Result<Bytes<N>> {
+pub fn cbor_serialize_bytes<T: ?Sized + serde::Serialize, const N: usize>(
+    object: &T,
+) -> Result<Bytes<N>> {
     let mut data = Bytes::<N>::new();
     cbor_serialize_extending_bytes(object, &mut data)?;
     Ok(data)
