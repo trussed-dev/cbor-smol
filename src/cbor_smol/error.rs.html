@@ -145,6 +145,9 @@
 <a href="#145" id="145">145</a>
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(unused_variables)]
 
 </span><span class="kw">use </span>core::fmt::{Display, Formatter};
@@ -189,6 +192,8 @@
     </span>DeserializeBadI16,
     <span class="doccomment">/// Expected a i32, was too large
     </span>DeserializeBadI32,
+    <span class="doccomment">/// Expected a i64, was too large
+    </span>DeserializeBadI64,
     <span class="doccomment">/// Expected a u8
     </span>DeserializeBadU8,
     <span class="doccomment">/// Expected a u16
@@ -238,6 +243,7 @@
                 </span>DeserializeBadI8 =&gt; <span class="string">"Expected a i8"</span>,
                 DeserializeBadI16 =&gt; <span class="string">"Expected a i16"</span>,
                 DeserializeBadI32 =&gt; <span class="string">"Expected a i32"</span>,
+                DeserializeBadI64 =&gt; <span class="string">"Expected a i64"</span>,
                 DeserializeBadMajor =&gt; <span class="string">"Expected a different major type"</span>,
                 DeserializeBadU8 =&gt; <span class="string">"Expected a u8"</span>,
                 DeserializeBadU16 =&gt; <span class="string">"Expected a u16"</span>,
