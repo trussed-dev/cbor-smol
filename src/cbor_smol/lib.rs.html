@@ -56,6 +56,8 @@
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
 <a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
 </pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(not(test), no_std)]
 
 #[macro_use]
@@ -75,7 +77,7 @@
 // pub use de::take_from_bytes;
 
 // kudos to postcard, this is much nicer than returning size
-</span><span class="kw">pub fn </span>cbor_serialize&lt;<span class="lifetime">'a</span>, T: serde::Serialize&gt;(
+</span><span class="kw">pub fn </span>cbor_serialize&lt;<span class="lifetime">'a</span>, T: <span class="question-mark">?</span>Sized + serde::Serialize&gt;(
     object: <span class="kw-2">&amp;</span>T,
     buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>[u8],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8]&gt; {
@@ -91,7 +93,7 @@
 }
 
 <span class="doccomment">/// Append serialization of object to existing bytes, returning length of serialized object.
-</span><span class="kw">pub fn </span>cbor_serialize_extending_bytes&lt;T: serde::Serialize, <span class="kw">const </span>N: usize&gt;(
+</span><span class="kw">pub fn </span>cbor_serialize_extending_bytes&lt;T: <span class="question-mark">?</span>Sized + serde::Serialize, <span class="kw">const </span>N: usize&gt;(
     object: <span class="kw-2">&amp;</span>T,
     bytes: <span class="kw-2">&amp;mut </span>Bytes&lt;N&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
@@ -104,7 +106,9 @@
 }
 
 <span class="doccomment">/// Serialize object into newly allocated Bytes.
-</span><span class="kw">pub fn </span>cbor_serialize_bytes&lt;T: serde::Serialize, <span class="kw">const </span>N: usize&gt;(object: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;Bytes&lt;N&gt;&gt; {
+</span><span class="kw">pub fn </span>cbor_serialize_bytes&lt;T: <span class="question-mark">?</span>Sized + serde::Serialize, <span class="kw">const </span>N: usize&gt;(
+    object: <span class="kw-2">&amp;</span>T,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Bytes&lt;N&gt;&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>data = Bytes::&lt;N&gt;::new();
     cbor_serialize_extending_bytes(object, <span class="kw-2">&amp;mut </span>data)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(data)
