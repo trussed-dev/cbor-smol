@@ -1264,6 +1264,20 @@
 <a href="#1264" id="1264">1264</a>
 <a href="#1265" id="1265">1265</a>
 <a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">use </span>serde::de::IntoDeserializer;
@@ -1863,10 +1877,24 @@
     <span class="kw">where
         </span>V: Visitor&lt;<span class="lifetime">'de</span>&gt;,
     {
-        <span class="comment">// major type 2: "byte string"
-        </span><span class="kw">let </span>length = <span class="self">self</span>.raw_deserialize_u32(MAJOR_BYTES)<span class="question-mark">? </span><span class="kw">as </span>usize;
-        <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span><span class="lifetime">'de </span>[u8] = <span class="self">self</span>.try_take_n(length)<span class="question-mark">?</span>;
-        visitor.visit_borrowed_bytes(bytes)
+        <span class="kw">let </span>major = <span class="self">self</span>.peek_major()<span class="question-mark">?</span>;
+        <span class="kw">match </span>major {
+            <span class="attr">#[cfg(feature = <span class="string">"bytes-from-array"</span>)]
+            </span>MAJOR_ARRAY =&gt; {
+                <span class="kw">let </span>len = <span class="self">self</span>.raw_deserialize_u32(MAJOR_ARRAY)<span class="question-mark">?</span>;
+                visitor.visit_seq(SeqAccess {
+                    deserializer: <span class="self">self</span>,
+                    len: len <span class="kw">as </span>usize,
+                })
+            }
+            MAJOR_BYTES =&gt; {
+                <span class="comment">// major type 2: "byte string"
+                </span><span class="kw">let </span>length = <span class="self">self</span>.raw_deserialize_u32(MAJOR_BYTES)<span class="question-mark">? </span><span class="kw">as </span>usize;
+                <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span><span class="lifetime">'de </span>[u8] = <span class="self">self</span>.try_take_n(length)<span class="question-mark">?</span>;
+                visitor.visit_borrowed_bytes(bytes)
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::DeserializeBadMajor),
+        }
     }
 
     <span class="kw">fn </span>deserialize_byte_buf&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value&gt;
