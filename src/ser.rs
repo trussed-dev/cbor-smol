@@ -2,6 +2,8 @@ use super::error::{Error, Result};
 use serde::ser;
 use serde::Serialize;
 
+use core::mem;
+
 use crate::consts::*;
 
 // pub fn to_slice<'a, 'b, T>(value: &'a T, buf: &'b mut [u8]) -> Result<&'b mut [u8]>
@@ -16,86 +18,157 @@ pub trait Writer {
     type Error: Into<Error>;
 
     /// Attempts to write an entire buffer into this write.
-    fn write_all(&mut self, buf: &[u8]) -> core::result::Result<(), Self::Error>;
+    fn write_all(&mut self, buf: &[u8]) -> Result<(), Self::Error>;
 }
 
-#[derive(Debug)]
-pub struct SliceWriter<'a> {
-    slice: &'a mut [u8],
-    index: usize,
-}
-
-impl<'a> SliceWriter<'a> {
-    /// Wraps a mutable slice so it can be used as a `Writer`.
-    pub fn new(slice: &'a mut [u8]) -> SliceWriter<'a> {
-        SliceWriter { slice, index: 0 }
-    }
-
-    /// Returns the number of bytes written to the underlying slice.
-    pub fn bytes_written(&self) -> usize {
-        self.index
-    }
-
-    /// Returns the underlying slice.
-    pub fn into_inner(self) -> &'a mut [u8] {
-        self.slice
-    }
-}
-
-impl<'a> Writer for SliceWriter<'a> {
+impl<'a> Writer for &'a mut [u8] {
     type Error = Error;
-
-    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+    fn write_all<'b>(&'b mut self, buf: &[u8]) -> Result<()> {
         let l = buf.len();
-        if self.slice.len() - self.index < l {
+        if self.len() < l {
             // This buffer will not fit in our slice
-            return Err(Error::SerializeBufferFull(self.index));
+            return Err(Error::SerializeBufferFull(0));
         }
-        self.slice[self.index..][..l].copy_from_slice(buf);
-        self.index += l;
+        let (current, rem) = mem::take(self).split_at_mut(l);
+        current.copy_from_slice(buf);
+        *self = rem;
         Ok(())
     }
 }
 
-impl<'a, const N: usize> Writer for &'a mut crate::Bytes<N> {
+#[cfg(feature = "heapless-bytes-v0-3")]
+impl<const N: usize> Writer for heapless_bytes_v0_3::Bytes<N> {
     type Error = Error;
-
     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
         self.extend_from_slice(buf)
-            .map_err(|_| Error::SerializeBufferFull(buf.len()))
+            .or(Err(Error::SerializeBufferFull(self.len())))
     }
 }
 
-pub struct Serializer<W>
-// where
-//     W: Writer,
-{
-    pub writer: W,
+#[cfg(feature = "heapless-bytes-v0-4")]
+impl<const N: usize> Writer for heapless_bytes_v0_4::Bytes<N> {
+    type Error = Error;
+    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+        self.extend_from_slice(buf)
+            .or(Err(Error::SerializeBufferFull(self.len())))
+    }
+}
+
+#[cfg(feature = "heapless-v0-7")]
+impl<const N: usize> Writer for heapless_v0_7::Vec<u8, N> {
+    type Error = Error;
+    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+        self.extend_from_slice(buf)
+            .or(Err(Error::SerializeBufferFull(self.len())))
+    }
+}
+
+#[cfg(feature = "heapless-v0-8")]
+impl<const N: usize> Writer for heapless_v0_8::Vec<u8, N> {
+    type Error = Error;
+    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+        self.extend_from_slice(buf)
+            .or(Err(Error::SerializeBufferFull(self.len())))
+    }
+}
+
+impl<'a, T: Writer> Writer for &'a mut T {
+    type Error = T::Error;
+    fn write_all(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
+        (**self).write_all(buf)
+    }
+}
+
+// #[derive(Debug)]
+// pub struct SliceWriter<'a> {
+//     slice: &'a mut [u8],
+//     index: usize,
+// }
+
+// impl<'a> SliceWriter<'a> {
+//     /// Wraps a mutable slice so it can be used as a `Writer`.
+//     pub fn new(slice: &'a mut [u8]) -> SliceWriter<'a> {
+//         SliceWriter { slice, index: 0 }
+//     }
+
+//     /// Returns the number of bytes written to the underlying slice.
+//     pub fn bytes_written(&self) -> usize {
+//         self.index
+//     }
+
+//     /// Returns the underlying slice.
+//     pub fn into_inner(self) -> &'a mut [u8] {
+//         self.slice
+//     }
+// }
+
+// impl<'a> Writer for SliceWriter<'a> {
+//     type Error = Error;
+
+//     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+//         let l = buf.len();
+//         if self.slice.len() - self.index < l {
+//             // This buffer will not fit in our slice
+//             return Err(Error::SerializeBufferFull(self.index));
+//         }
+//         self.slice[self.index..][..l].copy_from_slice(buf);
+//         self.index += l;
+//         Ok(())
+//     }
+// }
+
+// impl<'a, const N: usize> Writer for &'a mut crate::Bytes<N> {
+//     type Error = Error;
+
+//     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+//         self.extend_from_slice(buf)
+//             .map_err(|_| Error::SerializeBufferFull(buf.len()))
+//     }
+// }
+
+struct WrittenWriter<W> {
+    writer: W,
+    written: usize,
+}
+
+impl<W: Writer> Writer for WrittenWriter<W> {
+    type Error = W::Error;
+
+    fn write_all(&mut self, buf: &[u8]) -> core::result::Result<(), Self::Error> {
+        self.written += buf.len();
+        self.writer.write_all(buf)
+    }
+}
+
+pub struct Serializer<W> {
+    inner: WrittenWriter<W>,
 }
 
 impl<W: Writer> Serializer<W> {
     #[inline]
     pub fn new(writer: W) -> Self {
         Serializer {
-            writer,
-            // packed: false,
-            // enum_as_map: true,
+            inner: WrittenWriter { writer, written: 0 },
         }
+    }
+
+    pub fn written(&self) -> usize {
+        self.inner.written
     }
 
     /// Unwrap the `Writer` from the `Serializer`.
     #[inline]
     pub fn into_inner(self) -> W {
-        self.writer
+        self.inner.writer
     }
 
     #[inline]
     fn write_u8(&mut self, major: u8, value: u8) -> Result<()> {
         if value <= 0x17 {
-            self.writer.write_all(&[major << MAJOR_OFFSET | value])
+            self.inner.write_all(&[major << MAJOR_OFFSET | value])
         } else {
             let buf = [major << MAJOR_OFFSET | 24, value];
-            self.writer.write_all(&buf)
+            self.inner.write_all(&buf)
         }
         .map_err(|e| e.into())
     }
@@ -107,7 +180,7 @@ impl<W: Writer> Serializer<W> {
         } else {
             let mut buf = [major << MAJOR_OFFSET | 25, 0, 0];
             buf[1..].copy_from_slice(&value.to_be_bytes());
-            self.writer.write_all(&buf).map_err(|e| e.into())
+            self.inner.write_all(&buf).map_err(|e| e.into())
         }
     }
 
@@ -118,7 +191,7 @@ impl<W: Writer> Serializer<W> {
         } else {
             let mut buf = [major << MAJOR_OFFSET | 26, 0, 0, 0, 0];
             buf[1..].copy_from_slice(&value.to_be_bytes());
-            self.writer.write_all(&buf).map_err(|e| e.into())
+            self.inner.write_all(&buf).map_err(|e| e.into())
         }
     }
 
@@ -129,7 +202,7 @@ impl<W: Writer> Serializer<W> {
         } else {
             let mut buf = [major << MAJOR_OFFSET | 27, 0, 0, 0, 0, 0, 0, 0, 0];
             buf[1..].copy_from_slice(&value.to_be_bytes());
-            self.writer.write_all(&buf).map_err(|e| e.into())
+            self.inner.write_all(&buf).map_err(|e| e.into())
         }
     }
 
@@ -145,7 +218,7 @@ impl<W: Writer> Serializer<W> {
                 false
             }
             None => {
-                self.writer
+                self.inner
                     .write_all(&[major << MAJOR_OFFSET | 31])
                     .map_err(|e| e.into())?;
                 true
@@ -186,7 +259,7 @@ where
     #[inline]
     fn serialize_bool(self, value: bool) -> Result<()> {
         let value = if value { VALUE_TRUE } else { VALUE_FALSE };
-        self.writer.write_all(&[value]).map_err(|e| e.into())
+        self.inner.write_all(&[value]).map_err(|e| e.into())
     }
 
     #[inline]
@@ -259,20 +332,18 @@ where
     #[inline]
     fn serialize_str(self, value: &str) -> Result<()> {
         self.write_u64(MAJOR_STR, value.len() as u64)?;
-        self.writer
-            .write_all(value.as_bytes())
-            .map_err(|e| e.into())
+        self.inner.write_all(value.as_bytes()).map_err(|e| e.into())
     }
 
     #[inline]
     fn serialize_bytes(self, value: &[u8]) -> Result<()> {
         self.write_u64(MAJOR_BYTES, value.len() as u64)?;
-        self.writer.write_all(value).map_err(|e| e.into())
+        self.inner.write_all(value).map_err(|e| e.into())
     }
 
     #[inline]
     fn serialize_none(self) -> Result<()> {
-        self.writer.write_all(&[VALUE_NULL]).map_err(|e| e.into())
+        self.inner.write_all(&[VALUE_NULL]).map_err(|e| e.into())
     }
 
     #[inline]
@@ -587,7 +658,7 @@ where
     #[inline]
     fn end_inner(self) -> Result<()> {
         if self.needs_eof {
-            self.ser.writer.write_all(&[0xff]).map_err(|e| e.into())
+            self.ser.inner.write_all(&[0xff]).map_err(|e| e.into())
         } else {
             Ok(())
         }
