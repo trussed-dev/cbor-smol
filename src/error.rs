@@ -3,7 +3,7 @@
 use core::fmt::{Display, Formatter};
 
 /// This is the Result type used by cbor-smol.
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T, Err = Error> = core::result::Result<T, Err>;
 
 /// This is the error type used by cbor-smol
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
