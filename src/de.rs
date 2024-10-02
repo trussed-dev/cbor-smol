@@ -812,7 +812,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                 // strings to fields (and the mapping from bytes to fields can be optimized out).
                 let length = self.raw_deserialize_u32(major)? as usize;
                 let bytes: &'de [u8] = self.try_take_n(length)?;
-                let string_slice = core::str::from_utf8(bytes).map_err(|_| Error::DeserializeBadUtf8)?;
+                let string_slice =
+                    core::str::from_utf8(bytes).map_err(|_| Error::DeserializeBadUtf8)?;
                 visitor.visit_borrowed_str(string_slice)
             }
             MAJOR_POSINT => self.deserialize_u64(visitor),
@@ -1054,17 +1055,28 @@ mod tests {
         }
     }
 
+    #[cfg_attr(
+        not(feature = "heapless-bytes-v0-4"),
+        ignore = "Enable heapless-bytes-v0-4 feature"
+    )]
     #[test]
     fn de_bytes() {
-        let mut buf = [0u8; 64];
+        #[cfg(feature = "heapless-bytes-v0-4")]
+        {
+            let mut buf = [0u8; 64];
 
-        let slice = b"thank you postcard!";
-        let bytes = crate::Bytes::<64>::from_slice(slice).unwrap();
-        let ser = cbor_serialize(&bytes, &mut buf).unwrap();
-        println!("serialized bytes = {:?}", ser);
-        let de: crate::Bytes<64> = from_bytes(&buf).unwrap();
-        println!("deserialized bytes = {:?}", &de);
-        assert_eq!(&de, slice);
+            let slice = b"thank you postcard!";
+            let bytes = heapless_bytes_v0_4::Bytes::<64>::try_from(slice).unwrap();
+            let ser = cbor_serialize(&bytes, &mut buf).unwrap();
+            println!("serialized bytes = {:?}", ser);
+            let de: heapless_bytes_v0_4::Bytes<64> = from_bytes(&buf).unwrap();
+            println!("deserialized bytes = {:?}", &de);
+            assert_eq!(&de, slice);
+        }
+        #[cfg(not(feature = "heapless-bytes-v0-4"))]
+        {
+            panic!("This test must be run with the heapless-v0-4 feature")
+        }
     }
 
     #[test]
@@ -1072,10 +1084,10 @@ mod tests {
         let mut buf = [0u8; 64];
 
         let string_slice = "thank you postcard, for blazing the path 🐝";
-        let mut string = heapless::String::<64>::new();
+        let mut string = heapless_v0_8::String::<64>::new();
         string.push_str(string_slice).unwrap();
         let _n = cbor_serialize(&string, &mut buf);
-        let de: heapless::String<64> = from_bytes(&buf).unwrap();
+        let de: heapless_v0_8::String<64> = from_bytes(&buf).unwrap();
         assert_eq!(de, string_slice);
     }
 
