@@ -1281,6 +1281,19 @@
 <a href="#1281" id="1281">1281</a>
 <a href="#1282" id="1282">1282</a>
 <a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">use </span>serde::de::IntoDeserializer;
@@ -2089,7 +2102,20 @@
     <span class="kw">where
         </span>V: Visitor&lt;<span class="lifetime">'de</span>&gt;,
     {
-        <span class="self">self</span>.deserialize_str(visitor)
+        <span class="kw">let </span>major = <span class="self">self</span>.peek_major()<span class="question-mark">?</span>;
+        <span class="kw">match </span>major {
+            MAJOR_BYTES | MAJOR_STR =&gt; {
+                <span class="comment">// Rust identifiers are always valid UTF-8 so we can assume that bytes are
+                // UTF-8-encoded strings.  This has the benefit that we only need a mapping from
+                // strings to fields (and the mapping from bytes to fields can be optimized out).
+                </span><span class="kw">let </span>length = <span class="self">self</span>.raw_deserialize_u32(major)<span class="question-mark">? </span><span class="kw">as </span>usize;
+                <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span><span class="lifetime">'de </span>[u8] = <span class="self">self</span>.try_take_n(length)<span class="question-mark">?</span>;
+                <span class="kw">let </span>string_slice = core::str::from_utf8(bytes).map_err(|<span class="kw">_</span>| Error::DeserializeBadUtf8)<span class="question-mark">?</span>;
+                visitor.visit_borrowed_str(string_slice)
+            }
+            MAJOR_POSINT =&gt; <span class="self">self</span>.deserialize_u64(visitor),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::DeserializeBadMajor),
+        }
     }
 
     <span class="kw">fn </span>deserialize_ignored_any&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value&gt;
