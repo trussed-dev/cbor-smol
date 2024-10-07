@@ -41,7 +41,8 @@ pub fn cbor_serialize_extending_bytes<T: ?Sized + serde::Serialize, const N: usi
     bytes: &mut heapless_bytes_v0_3::Bytes<N>,
 ) -> Result<usize> {
     let len_before = bytes.len();
-    let mut ser = ser::Serializer::new(bytes);
+    let vec: &mut heapless_v0_7::Vec<u8, N> = bytes;
+    let mut ser = ser::Serializer::new(vec);
 
     object.serialize(&mut ser)?;
 
