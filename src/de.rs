@@ -599,7 +599,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     {
         let major = self.peek_major()?;
         match major {
-            #[cfg(feature = "bytes-from-array")]
             MAJOR_ARRAY => {
                 let len = self.raw_deserialize_u32(MAJOR_ARRAY)?;
                 visitor.visit_seq(SeqAccess {
