@@ -15,7 +15,7 @@ use ser::Writer;
 /// Serialize an object to a `Writer`
 ///
 /// Returns the amount of bytes written to the writer
-pub fn cbor_serialize_to<'a, T: ?Sized + serde::Serialize, W: Writer>(
+pub fn cbor_serialize_to<T: ?Sized + serde::Serialize, W: Writer>(
     object: &T,
     writer: W,
 ) -> Result<usize> {
