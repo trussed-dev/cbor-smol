@@ -58,13 +58,18 @@
 <a href="#58" id="58">58</a>
 <a href="#59" id="59">59</a>
 <a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
 </pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(not(test), no_std)]
 
 #[macro_use]
 </span><span class="kw">extern crate </span>delog;
 <span class="macro">generate_macros!</span>();
-
-<span class="kw">pub use </span>heapless_bytes::Bytes;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>consts;
 <span class="kw">pub mod </span>de;
@@ -72,45 +77,54 @@
 <span class="kw">pub mod </span>ser;
 
 <span class="kw">pub use </span>error::{Error, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>ser::Writer;
 
-<span class="comment">// pub use de::from_bytes;
-// pub use de::take_from_bytes;
+<span class="doccomment">/// Serialize an object to a `Writer`
+///
+/// Returns the amount of bytes written to the writer
+</span><span class="kw">pub fn </span>cbor_serialize_to&lt;T: <span class="question-mark">?</span>Sized + serde::Serialize, W: Writer&gt;(
+    object: <span class="kw-2">&amp;</span>T,
+    writer: W,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>serializer = ser::Serializer::new(writer);
+    object.serialize(<span class="kw-2">&amp;mut </span>serializer)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(serializer.written())
+}
 
-// kudos to postcard, this is much nicer than returning size
+<span class="comment">// kudos to postcard, this is much nicer than returning size
 </span><span class="kw">pub fn </span>cbor_serialize&lt;<span class="lifetime">'a</span>, T: <span class="question-mark">?</span>Sized + serde::Serialize&gt;(
     object: <span class="kw-2">&amp;</span>T,
     buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>[u8],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8]&gt; {
-    <span class="kw">let </span>writer = ser::SliceWriter::new(buffer);
-    <span class="kw">let </span><span class="kw-2">mut </span>ser = ser::Serializer::new(writer);
-
-    object.serialize(<span class="kw-2">&amp;mut </span>ser)<span class="question-mark">?</span>;
-
-    <span class="kw">let </span>writer = ser.into_inner();
-    <span class="kw">let </span>size = writer.bytes_written();
-
-    <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span>buffer[..size])
+    <span class="kw">let </span><span class="kw-2">mut </span>buf = <span class="kw-2">&amp;mut *</span>buffer;
+    <span class="kw">let </span>written = cbor_serialize_to(object, <span class="kw-2">&amp;mut </span>buf)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span>buffer[..written])
 }
 
-<span class="doccomment">/// Append serialization of object to existing bytes, returning length of serialized object.
+<span class="attr">#[cfg(feature = <span class="string">"heapless-bytes-v0-3"</span>)]
+#[deprecated(note = <span class="string">"use `cbor_serialize_to` instead"</span>)]
+</span><span class="doccomment">/// Append serialization of object to existing bytes, returning length of serialized object.
 </span><span class="kw">pub fn </span>cbor_serialize_extending_bytes&lt;T: <span class="question-mark">?</span>Sized + serde::Serialize, <span class="kw">const </span>N: usize&gt;(
     object: <span class="kw-2">&amp;</span>T,
-    bytes: <span class="kw-2">&amp;mut </span>Bytes&lt;N&gt;,
+    bytes: <span class="kw-2">&amp;mut </span>heapless_bytes_v0_3::Bytes&lt;N&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
     <span class="kw">let </span>len_before = bytes.len();
-    <span class="kw">let </span><span class="kw-2">mut </span>ser = ser::Serializer::new(bytes);
+    <span class="kw">let </span>vec: <span class="kw-2">&amp;mut </span>heapless_v0_7::Vec&lt;u8, N&gt; = bytes;
+    <span class="kw">let </span><span class="kw-2">mut </span>ser = ser::Serializer::new(vec);
 
     object.serialize(<span class="kw-2">&amp;mut </span>ser)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(ser.into_inner().len() - len_before)
 }
 
-<span class="doccomment">/// Serialize object into newly allocated Bytes.
+<span class="attr">#[cfg(feature = <span class="string">"heapless-bytes-v0-3"</span>)]
+</span><span class="doccomment">/// Serialize object into newly allocated Bytes.
 </span><span class="kw">pub fn </span>cbor_serialize_bytes&lt;T: <span class="question-mark">?</span>Sized + serde::Serialize, <span class="kw">const </span>N: usize&gt;(
     object: <span class="kw-2">&amp;</span>T,
-) -&gt; <span class="prelude-ty">Result</span>&lt;Bytes&lt;N&gt;&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>data = Bytes::&lt;N&gt;::new();
-    cbor_serialize_extending_bytes(object, <span class="kw-2">&amp;mut </span>data)<span class="question-mark">?</span>;
+) -&gt; <span class="prelude-ty">Result</span>&lt;heapless_bytes_v0_3::Bytes&lt;N&gt;&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>data = heapless_bytes_v0_3::Bytes::&lt;N&gt;::new();
+    <span class="attr">#[allow(deprecated)]
+    </span>cbor_serialize_extending_bytes(object, <span class="kw-2">&amp;mut </span>data)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(data)
 }
 

@@ -1292,6 +1292,18 @@
 <a href="#1292" id="1292">1292</a>
 <a href="#1293" id="1293">1293</a>
 <a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">use </span>serde::de::IntoDeserializer;
@@ -1409,7 +1421,7 @@
 
     <span class="kw">fn </span>raw_deserialize_u16(<span class="kw-2">&amp;mut </span><span class="self">self</span>, major: u8) -&gt; <span class="prelude-ty">Result</span>&lt;u16&gt; {
         <span class="kw">let </span>number = <span class="self">self</span>.raw_deserialize_u32(major)<span class="question-mark">?</span>;
-        <span class="kw">if </span>number &lt;= u16::max_value() <span class="kw">as </span>u32 {
+        <span class="kw">if </span>number &lt;= u16::MAX <span class="kw">as </span>u32 {
             <span class="prelude-val">Ok</span>(number <span class="kw">as </span>u16)
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(Error::DeserializeBadU16)
@@ -1739,7 +1751,7 @@
         <span class="kw">match </span><span class="self">self</span>.peek_major()<span class="question-mark">? </span>{
             MAJOR_POSINT =&gt; {
                 <span class="kw">let </span>raw_u8 = <span class="self">self</span>.raw_deserialize_u8(<span class="number">0</span>)<span class="question-mark">?</span>;
-                <span class="kw">if </span>raw_u8 &lt;= i8::max_value() <span class="kw">as </span>u8 {
+                <span class="kw">if </span>raw_u8 &lt;= i8::MAX <span class="kw">as </span>u8 {
                     visitor.visit_i8(raw_u8 <span class="kw">as </span>i8)
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(Error::DeserializeBadI8)
@@ -1747,7 +1759,7 @@
             }
             MAJOR_NEGINT =&gt; {
                 <span class="kw">let </span>raw_u8 = <span class="self">self</span>.raw_deserialize_u8(<span class="number">1</span>)<span class="question-mark">?</span>;
-                <span class="comment">// if raw_u8 &lt;= 1 + i8::max_value() as u8 {
+                <span class="comment">// if raw_u8 &lt;= 1 + i8::MAX as u8 {
                 </span><span class="kw">if </span>raw_u8 &lt;= <span class="number">128 </span>{
                     visitor.visit_i8(-<span class="number">1 </span>- (raw_u8 <span class="kw">as </span>i16) <span class="kw">as </span>i8)
                 } <span class="kw">else </span>{
@@ -1765,7 +1777,7 @@
         <span class="kw">match </span><span class="self">self</span>.peek_major()<span class="question-mark">? </span>{
             MAJOR_POSINT =&gt; {
                 <span class="kw">let </span>raw = <span class="self">self</span>.raw_deserialize_u16(<span class="number">0</span>)<span class="question-mark">?</span>;
-                <span class="kw">if </span>raw &lt;= i16::max_value() <span class="kw">as </span>u16 {
+                <span class="kw">if </span>raw &lt;= i16::MAX <span class="kw">as </span>u16 {
                     visitor.visit_i16(raw <span class="kw">as </span>i16)
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(Error::DeserializeBadI16)
@@ -1773,7 +1785,7 @@
             }
             MAJOR_NEGINT =&gt; {
                 <span class="kw">let </span>raw = <span class="self">self</span>.raw_deserialize_u16(<span class="number">1</span>)<span class="question-mark">?</span>;
-                <span class="kw">if </span>raw &lt;= i16::max_value() <span class="kw">as </span>u16 {
+                <span class="kw">if </span>raw &lt;= i16::MAX <span class="kw">as </span>u16 {
                     visitor.visit_i16(-<span class="number">1 </span>- (raw <span class="kw">as </span>i16))
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(Error::DeserializeBadI16)
@@ -1791,7 +1803,7 @@
             <span class="comment">// TODO: figure out if this is BAAAAD for size or speed
             </span>major @ <span class="number">0</span>..=<span class="number">1 </span>=&gt; {
                 <span class="kw">let </span>raw = <span class="self">self</span>.raw_deserialize_u32(major)<span class="question-mark">?</span>;
-                <span class="kw">if </span>raw &lt;= i32::max_value() <span class="kw">as </span>u32 {
+                <span class="kw">if </span>raw &lt;= i32::MAX <span class="kw">as </span>u32 {
                     <span class="kw">if </span>major == MAJOR_POSINT {
                         visitor.visit_i32(raw <span class="kw">as </span>i32)
                     } <span class="kw">else </span>{
@@ -1813,7 +1825,7 @@
             <span class="comment">// TODO: figure out if this is BAAAAD for size or speed
             </span>major @ <span class="number">0</span>..=<span class="number">1 </span>=&gt; {
                 <span class="kw">let </span>raw = <span class="self">self</span>.raw_deserialize_u64(major)<span class="question-mark">?</span>;
-                <span class="kw">if </span>raw &lt;= i64::max_value() <span class="kw">as </span>u64 {
+                <span class="kw">if </span>raw &lt;= i64::MAX <span class="kw">as </span>u64 {
                     <span class="kw">if </span>major == MAJOR_POSINT {
                         visitor.visit_i64(raw <span class="kw">as </span>i64)
                     } <span class="kw">else </span>{
@@ -1856,7 +1868,7 @@
         </span>V: Visitor&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="kw">let </span>raw = <span class="self">self</span>.raw_deserialize_u64(MAJOR_POSINT)<span class="question-mark">?</span>;
-        visitor.visit_u64(raw <span class="kw">as </span>u64)
+        visitor.visit_u64(raw)
     }
 
     <span class="kw">fn </span>deserialize_f32&lt;V&gt;(<span class="self">self</span>, _visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value&gt;
@@ -2106,7 +2118,8 @@
                 // strings to fields (and the mapping from bytes to fields can be optimized out).
                 </span><span class="kw">let </span>length = <span class="self">self</span>.raw_deserialize_u32(major)<span class="question-mark">? </span><span class="kw">as </span>usize;
                 <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span><span class="lifetime">'de </span>[u8] = <span class="self">self</span>.try_take_n(length)<span class="question-mark">?</span>;
-                <span class="kw">let </span>string_slice = core::str::from_utf8(bytes).map_err(|<span class="kw">_</span>| Error::DeserializeBadUtf8)<span class="question-mark">?</span>;
+                <span class="kw">let </span>string_slice =
+                    core::str::from_utf8(bytes).map_err(|<span class="kw">_</span>| Error::DeserializeBadUtf8)<span class="question-mark">?</span>;
                 visitor.visit_borrowed_str(string_slice)
             }
             MAJOR_POSINT =&gt; <span class="self">self</span>.deserialize_u64(visitor),
@@ -2264,7 +2277,7 @@
     </span><span class="kw">fn </span>de_i16() {
         <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">64</span>];
 
-        <span class="kw">for </span>number <span class="kw">in </span>i16::min_value()..=i16::max_value() {
+        <span class="kw">for </span>number <span class="kw">in </span>i16::min_value()..=i16::MAX {
             <span class="macro">println!</span>(<span class="string">"testing {}"</span>, number);
             <span class="kw">let </span>_n = cbor_serialize(<span class="kw-2">&amp;</span>number, <span class="kw-2">&amp;mut </span>buf).unwrap();
             <span class="kw">let </span>de: i16 = from_bytes(<span class="kw-2">&amp;</span>buf).unwrap();
@@ -2276,14 +2289,14 @@
     </span><span class="kw">fn </span>de_u32() {
         <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">64</span>];
 
-        <span class="kw">for </span>number <span class="kw">in </span><span class="number">0</span>..=<span class="number">3 </span>* (u16::max_value() <span class="kw">as </span>u32) {
+        <span class="kw">for </span>number <span class="kw">in </span><span class="number">0</span>..=<span class="number">3 </span>* (u16::MAX <span class="kw">as </span>u32) {
             <span class="macro">println!</span>(<span class="string">"testing {}"</span>, number);
             <span class="kw">let </span>_n = cbor_serialize(<span class="kw-2">&amp;</span>number, <span class="kw-2">&amp;mut </span>buf).unwrap();
             <span class="kw">let </span>de: u32 = from_bytes(<span class="kw-2">&amp;</span>buf).unwrap();
             <span class="macro">assert_eq!</span>(de, number);
         }
 
-        <span class="kw">for </span>number <span class="kw">in </span>(u32::max_value() - u16::max_value() <span class="kw">as </span>u32)..=u32::max_value() {
+        <span class="kw">for </span>number <span class="kw">in </span>(u32::MAX - u16::MAX <span class="kw">as </span>u32)..=u32::MAX {
             <span class="macro">println!</span>(<span class="string">"testing {}"</span>, number);
             <span class="kw">let </span>_n = cbor_serialize(<span class="kw-2">&amp;</span>number, <span class="kw-2">&amp;mut </span>buf).unwrap();
             <span class="kw">let </span>de: u32 = from_bytes(<span class="kw-2">&amp;</span>buf).unwrap();
@@ -2326,14 +2339,14 @@
         <span class="kw">let </span>de: i32 = from_bytes(ser).unwrap();
         <span class="macro">assert_eq!</span>(de, number);
 
-        <span class="kw">for </span>number <span class="kw">in </span>(<span class="number">3 </span>* i16::min_value() <span class="kw">as </span>i32)..=<span class="number">3 </span>* (i16::max_value() <span class="kw">as </span>i32) {
+        <span class="kw">for </span>number <span class="kw">in </span>(<span class="number">3 </span>* i16::min_value() <span class="kw">as </span>i32)..=<span class="number">3 </span>* (i16::MAX <span class="kw">as </span>i32) {
             <span class="macro">println!</span>(<span class="string">"testing {}"</span>, number);
             <span class="kw">let </span>ser = cbor_serialize(<span class="kw-2">&amp;</span>number, <span class="kw-2">&amp;mut </span>buf).unwrap();
             <span class="kw">let </span>de: i32 = from_bytes(ser).unwrap();
             <span class="macro">assert_eq!</span>(de, number);
         }
 
-        <span class="kw">for </span>number <span class="kw">in </span>(i32::max_value() - i16::max_value() <span class="kw">as </span>i32)..=i32::max_value() {
+        <span class="kw">for </span>number <span class="kw">in </span>(i32::MAX - i16::MAX <span class="kw">as </span>i32)..=i32::MAX {
             <span class="macro">println!</span>(<span class="string">"testing {}"</span>, number);
             <span class="kw">let </span>ser = cbor_serialize(<span class="kw-2">&amp;</span>number, <span class="kw-2">&amp;mut </span>buf).unwrap();
             <span class="kw">let </span>de: i32 = from_bytes(ser).unwrap();
@@ -2348,17 +2361,28 @@
         }
     }
 
-    <span class="attr">#[test]
+    <span class="attr">#[cfg_attr(
+        not(feature = <span class="string">"heapless-bytes-v0-4"</span>),
+        ignore = <span class="string">"Enable heapless-bytes-v0-4 feature"
+    </span>)]
+    #[test]
     </span><span class="kw">fn </span>de_bytes() {
-        <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">64</span>];
+        <span class="attr">#[cfg(feature = <span class="string">"heapless-bytes-v0-4"</span>)]
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">64</span>];
 
-        <span class="kw">let </span>slice = <span class="string">b"thank you postcard!"</span>;
-        <span class="kw">let </span>bytes = <span class="kw">crate</span>::Bytes::&lt;<span class="number">64</span>&gt;::from_slice(slice).unwrap();
-        <span class="kw">let </span>ser = cbor_serialize(<span class="kw-2">&amp;</span>bytes, <span class="kw-2">&amp;mut </span>buf).unwrap();
-        <span class="macro">println!</span>(<span class="string">"serialized bytes = {:?}"</span>, ser);
-        <span class="kw">let </span>de: <span class="kw">crate</span>::Bytes&lt;<span class="number">64</span>&gt; = from_bytes(<span class="kw-2">&amp;</span>buf).unwrap();
-        <span class="macro">println!</span>(<span class="string">"deserialized bytes = {:?}"</span>, <span class="kw-2">&amp;</span>de);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>de, slice);
+            <span class="kw">let </span>slice = <span class="string">b"thank you postcard!"</span>;
+            <span class="kw">let </span>bytes = heapless_bytes_v0_4::Bytes::&lt;<span class="number">64</span>&gt;::try_from(slice).unwrap();
+            <span class="kw">let </span>ser = cbor_serialize(<span class="kw-2">&amp;</span>bytes, <span class="kw-2">&amp;mut </span>buf).unwrap();
+            <span class="macro">println!</span>(<span class="string">"serialized bytes = {:?}"</span>, ser);
+            <span class="kw">let </span>de: heapless_bytes_v0_4::Bytes&lt;<span class="number">64</span>&gt; = from_bytes(<span class="kw-2">&amp;</span>buf).unwrap();
+            <span class="macro">println!</span>(<span class="string">"deserialized bytes = {:?}"</span>, <span class="kw-2">&amp;</span>de);
+            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>de, slice);
+        }
+        <span class="attr">#[cfg(not(feature = <span class="string">"heapless-bytes-v0-4"</span>))]
+        </span>{
+            <span class="macro">panic!</span>(<span class="string">"This test must be run with the heapless-v0-4 feature"</span>)
+        }
     }
 
     <span class="attr">#[test]
@@ -2366,10 +2390,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">64</span>];
 
         <span class="kw">let </span>string_slice = <span class="string">"thank you postcard, for blazing the path 🐝"</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>string = heapless::String::&lt;<span class="number">64</span>&gt;::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>string = heapless_v0_8::String::&lt;<span class="number">64</span>&gt;::new();
         string.push_str(string_slice).unwrap();
         <span class="kw">let </span>_n = cbor_serialize(<span class="kw-2">&amp;</span>string, <span class="kw-2">&amp;mut </span>buf);
-        <span class="kw">let </span>de: heapless::String&lt;<span class="number">64</span>&gt; = from_bytes(<span class="kw-2">&amp;</span>buf).unwrap();
+        <span class="kw">let </span>de: heapless_v0_8::String&lt;<span class="number">64</span>&gt; = from_bytes(<span class="kw-2">&amp;</span>buf).unwrap();
         <span class="macro">assert_eq!</span>(de, string_slice);
     }
 

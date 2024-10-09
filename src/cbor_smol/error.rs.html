@@ -153,7 +153,7 @@
 </span><span class="kw">use </span>core::fmt::{Display, Formatter};
 
 <span class="doccomment">/// This is the Result type used by cbor-smol.
-</span><span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = core::result::Result&lt;T, Error&gt;;
+</span><span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T, <span class="prelude-val">Err </span>= Error&gt; = core::result::Result&lt;T, <span class="prelude-val">Err</span>&gt;;
 
 <span class="doccomment">/// This is the error type used by cbor-smol
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, PartialEq)]
