@@ -115,7 +115,7 @@ impl<'de> Deserializer<'de> {
 
     fn raw_deserialize_u16(&mut self, major: u8) -> Result<u16> {
         let number = self.raw_deserialize_u32(major)?;
-        if number <= u16::max_value() as u32 {
+        if number <= u16::MAX as u32 {
             Ok(number as u16)
         } else {
             Err(Error::DeserializeBadU16)
@@ -445,7 +445,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         match self.peek_major()? {
             MAJOR_POSINT => {
                 let raw_u8 = self.raw_deserialize_u8(0)?;
-                if raw_u8 <= i8::max_value() as u8 {
+                if raw_u8 <= i8::MAX as u8 {
                     visitor.visit_i8(raw_u8 as i8)
                 } else {
                     Err(Error::DeserializeBadI8)
@@ -453,7 +453,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             }
             MAJOR_NEGINT => {
                 let raw_u8 = self.raw_deserialize_u8(1)?;
-                // if raw_u8 <= 1 + i8::max_value() as u8 {
+                // if raw_u8 <= 1 + i8::MAX as u8 {
                 if raw_u8 <= 128 {
                     visitor.visit_i8(-1 - (raw_u8 as i16) as i8)
                 } else {
@@ -471,7 +471,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         match self.peek_major()? {
             MAJOR_POSINT => {
                 let raw = self.raw_deserialize_u16(0)?;
-                if raw <= i16::max_value() as u16 {
+                if raw <= i16::MAX as u16 {
                     visitor.visit_i16(raw as i16)
                 } else {
                     Err(Error::DeserializeBadI16)
@@ -479,7 +479,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             }
             MAJOR_NEGINT => {
                 let raw = self.raw_deserialize_u16(1)?;
-                if raw <= i16::max_value() as u16 {
+                if raw <= i16::MAX as u16 {
                     visitor.visit_i16(-1 - (raw as i16))
                 } else {
                     Err(Error::DeserializeBadI16)
@@ -497,7 +497,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             // TODO: figure out if this is BAAAAD for size or speed
             major @ 0..=1 => {
                 let raw = self.raw_deserialize_u32(major)?;
-                if raw <= i32::max_value() as u32 {
+                if raw <= i32::MAX as u32 {
                     if major == MAJOR_POSINT {
                         visitor.visit_i32(raw as i32)
                     } else {
@@ -519,7 +519,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             // TODO: figure out if this is BAAAAD for size or speed
             major @ 0..=1 => {
                 let raw = self.raw_deserialize_u64(major)?;
-                if raw <= i64::max_value() as u64 {
+                if raw <= i64::MAX as u64 {
                     if major == MAJOR_POSINT {
                         visitor.visit_i64(raw as i64)
                     } else {
@@ -562,7 +562,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         let raw = self.raw_deserialize_u64(MAJOR_POSINT)?;
-        visitor.visit_u64(raw as u64)
+        visitor.visit_u64(raw)
     }
 
     fn deserialize_f32<V>(self, _visitor: V) -> Result<V::Value>
@@ -971,7 +971,7 @@ mod tests {
     fn de_i16() {
         let mut buf = [0u8; 64];
 
-        for number in i16::min_value()..=i16::max_value() {
+        for number in i16::min_value()..=i16::MAX {
             println!("testing {}", number);
             let _n = cbor_serialize(&number, &mut buf).unwrap();
             let de: i16 = from_bytes(&buf).unwrap();
@@ -983,14 +983,14 @@ mod tests {
     fn de_u32() {
         let mut buf = [0u8; 64];
 
-        for number in 0..=3 * (u16::max_value() as u32) {
+        for number in 0..=3 * (u16::MAX as u32) {
             println!("testing {}", number);
             let _n = cbor_serialize(&number, &mut buf).unwrap();
             let de: u32 = from_bytes(&buf).unwrap();
             assert_eq!(de, number);
         }
 
-        for number in (u32::max_value() - u16::max_value() as u32)..=u32::max_value() {
+        for number in (u32::MAX - u16::MAX as u32)..=u32::MAX {
             println!("testing {}", number);
             let _n = cbor_serialize(&number, &mut buf).unwrap();
             let de: u32 = from_bytes(&buf).unwrap();
@@ -1033,14 +1033,14 @@ mod tests {
         let de: i32 = from_bytes(ser).unwrap();
         assert_eq!(de, number);
 
-        for number in (3 * i16::min_value() as i32)..=3 * (i16::max_value() as i32) {
+        for number in (3 * i16::min_value() as i32)..=3 * (i16::MAX as i32) {
             println!("testing {}", number);
             let ser = cbor_serialize(&number, &mut buf).unwrap();
             let de: i32 = from_bytes(ser).unwrap();
             assert_eq!(de, number);
         }
 
-        for number in (i32::max_value() - i16::max_value() as i32)..=i32::max_value() {
+        for number in (i32::MAX - i16::MAX as i32)..=i32::MAX {
             println!("testing {}", number);
             let ser = cbor_serialize(&number, &mut buf).unwrap();
             let de: i32 = from_bytes(ser).unwrap();

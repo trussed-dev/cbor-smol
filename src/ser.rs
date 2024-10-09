@@ -16,7 +16,7 @@ pub trait Writer {
 
 impl<'a> Writer for &'a mut [u8] {
     type Error = Error;
-    fn write_all<'b>(&'b mut self, buf: &[u8]) -> Result<()> {
+    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
         let l = buf.len();
         if self.len() < l {
             // This buffer will not fit in our slice
@@ -121,7 +121,7 @@ impl<W: Writer> Serializer<W> {
 
     #[inline]
     fn write_u16(&mut self, major: u8, value: u16) -> Result<()> {
-        if value <= u16::from(u8::max_value()) {
+        if value <= u16::from(u8::MAX) {
             self.write_u8(major, value as u8)
         } else {
             let mut buf = [major << MAJOR_OFFSET | 25, 0, 0];
@@ -132,7 +132,7 @@ impl<W: Writer> Serializer<W> {
 
     #[inline]
     fn write_u32(&mut self, major: u8, value: u32) -> Result<()> {
-        if value <= u32::from(u16::max_value()) {
+        if value <= u32::from(u16::MAX) {
             self.write_u16(major, value as u16)
         } else {
             let mut buf = [major << MAJOR_OFFSET | 26, 0, 0, 0, 0];
@@ -143,7 +143,7 @@ impl<W: Writer> Serializer<W> {
 
     #[inline]
     fn write_u64(&mut self, major: u8, value: u64) -> Result<()> {
-        if value <= u64::from(u32::max_value()) {
+        if value <= u64::from(u32::MAX) {
             self.write_u32(major, value as u32)
         } else {
             let mut buf = [major << MAJOR_OFFSET | 27, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -417,9 +417,9 @@ where
         self.serialize_struct(name, len)
     }
 
-    fn collect_str<T: ?Sized>(self, _value: &T) -> Result<Self::Ok>
+    fn collect_str<T>(self, _value: &T) -> Result<Self::Ok>
     where
-        T: core::fmt::Display,
+        T: core::fmt::Display + ?Sized,
     {
         unreachable!()
     }
