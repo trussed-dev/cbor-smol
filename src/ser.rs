@@ -6,13 +6,6 @@ use core::mem;
 
 use crate::consts::*;
 
-// pub fn to_slice<'a, 'b, T>(value: &'a T, buf: &'b mut [u8]) -> Result<&'b mut [u8]>
-// where
-//     T: Serialize + ?Sized,
-// {
-//     serialize_with_flavor::<T, Slice<'a>, &'a mut [u8]>(value, Slice::new(buf))
-// }
-
 pub trait Writer {
     /// The type of error returned when a write operation fails.
     type Error: Into<Error>;
@@ -78,53 +71,6 @@ impl<'a, T: Writer> Writer for &'a mut T {
         (**self).write_all(buf)
     }
 }
-
-// #[derive(Debug)]
-// pub struct SliceWriter<'a> {
-//     slice: &'a mut [u8],
-//     index: usize,
-// }
-
-// impl<'a> SliceWriter<'a> {
-//     /// Wraps a mutable slice so it can be used as a `Writer`.
-//     pub fn new(slice: &'a mut [u8]) -> SliceWriter<'a> {
-//         SliceWriter { slice, index: 0 }
-//     }
-
-//     /// Returns the number of bytes written to the underlying slice.
-//     pub fn bytes_written(&self) -> usize {
-//         self.index
-//     }
-
-//     /// Returns the underlying slice.
-//     pub fn into_inner(self) -> &'a mut [u8] {
-//         self.slice
-//     }
-// }
-
-// impl<'a> Writer for SliceWriter<'a> {
-//     type Error = Error;
-
-//     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
-//         let l = buf.len();
-//         if self.slice.len() - self.index < l {
-//             // This buffer will not fit in our slice
-//             return Err(Error::SerializeBufferFull(self.index));
-//         }
-//         self.slice[self.index..][..l].copy_from_slice(buf);
-//         self.index += l;
-//         Ok(())
-//     }
-// }
-
-// impl<'a, const N: usize> Writer for &'a mut crate::Bytes<N> {
-//     type Error = Error;
-
-//     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
-//         self.extend_from_slice(buf)
-//             .map_err(|_| Error::SerializeBufferFull(buf.len()))
-//     }
-// }
 
 struct WrittenWriter<W> {
     writer: W,
@@ -239,14 +185,6 @@ where
     type Ok = ();
 
     type Error = Error;
-
-    // type SerializeSeq = Self;
-    // type SerializeTuple = Self;
-    // type SerializeTupleStruct = Self;
-    // type SerializeTupleVariant = Self;
-    // type SerializeMap = Self;
-    // type SerializeStruct = Self;
-    // type SerializeStructVariant = Self;
 
     type SerializeSeq = CollectionSerializer<'a, W>;
     type SerializeTuple = &'a mut Serializer<W>;
@@ -456,19 +394,6 @@ where
         self.serialize_collection(MAJOR_MAP, len)
     }
 
-    // #[cfg(not(feature = "std"))]
-    // fn collect_str<T: ?Sized>(self, value: &T) -> Result<()>
-    // where
-    //     T: core::fmt::Display,
-    // {
-    //     use crate::write::FmtWrite;
-    //     use core::fmt::Write;
-
-    //     let mut w = FmtWrite::new(&mut self.writer);
-    //     write!(w, "{}", value)?;
-    //     Ok(())
-    // }
-
     #[inline]
     fn serialize_struct(self, _name: &'static str, len: usize) -> Result<Self::SerializeStruct> {
         self.write_u64(MAJOR_MAP, len as u64)?;
@@ -504,27 +429,6 @@ where
         false
     }
 }
-
-// impl<'a, W> ser::SerializeSeq for CollectionSerializer<'a, W>
-// where
-//     W: Writer,
-// {
-//     type Ok = ();
-//     type Error = Error;
-
-//     #[inline]
-//     fn serialize_element<T>(&mut self, value: &T) -> Result<()>
-//     where
-//         T: ?Sized + ser::Serialize,
-//     {
-//         value.serialize(&mut *self.ser)
-//     }
-
-//     #[inline]
-//     fn end(self) -> Result<()> {
-//         self.end_inner()
-//     }
-// }
 
 impl<'a, W> ser::SerializeTuple for &'a mut Serializer<W>
 where
@@ -606,11 +510,6 @@ where
         Ok(())
     }
 
-    // #[inline]
-    // fn skip_field(&mut self, key: &'static str) -> Result<()> {
-    //     Ok(())
-    // }
-
     #[inline]
     fn end(self) -> Result<()> {
         Ok(())
@@ -633,11 +532,6 @@ where
         value.serialize(&mut **self)?;
         Ok(())
     }
-
-    // #[inline]
-    // fn skip_field(&mut self, key: &'static str) -> Result<()> {
-    //     Ok(())
-    // }
 
     #[inline]
     fn end(self) -> Result<()> {
