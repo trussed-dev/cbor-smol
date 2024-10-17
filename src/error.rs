@@ -8,6 +8,7 @@ pub type Result<T, Err = Error> = core::result::Result<T, Err>;
 /// This is the error type used by cbor-smol
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
+#[non_exhaustive]
 pub enum Error {
     /// This is a feature that cbor-smol will never implement
     WontImplement,
