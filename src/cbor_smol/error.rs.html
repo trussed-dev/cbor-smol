@@ -148,6 +148,7 @@
 <a href="#148" id="148">148</a>
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(unused_variables)]
 
 </span><span class="kw">use </span>core::fmt::{Display, Formatter};
@@ -158,6 +159,7 @@
 <span class="doccomment">/// This is the error type used by cbor-smol
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
+#[non_exhaustive]
 </span><span class="kw">pub enum </span>Error {
     <span class="doccomment">/// This is a feature that cbor-smol will never implement
     </span>WontImplement,
