@@ -34,33 +34,6 @@ pub fn cbor_serialize<'a, T: ?Sized + serde::Serialize>(
     Ok(&buffer[..written])
 }
 
-#[cfg(feature = "heapless-bytes-v0-3")]
-#[deprecated(note = "use `cbor_serialize_to` instead")]
-/// Append serialization of object to existing bytes, returning length of serialized object.
-pub fn cbor_serialize_extending_bytes<T: ?Sized + serde::Serialize, const N: usize>(
-    object: &T,
-    bytes: &mut heapless_bytes_v0_3::Bytes<N>,
-) -> Result<usize> {
-    let len_before = bytes.len();
-    let vec: &mut heapless_v0_7::Vec<u8, N> = bytes;
-    let mut ser = ser::Serializer::new(vec);
-
-    object.serialize(&mut ser)?;
-
-    Ok(ser.into_inner().len() - len_before)
-}
-
-#[cfg(feature = "heapless-bytes-v0-3")]
-/// Serialize object into newly allocated Bytes.
-pub fn cbor_serialize_bytes<T: ?Sized + serde::Serialize, const N: usize>(
-    object: &T,
-) -> Result<heapless_bytes_v0_3::Bytes<N>> {
-    let mut data = heapless_bytes_v0_3::Bytes::<N>::new();
-    #[allow(deprecated)]
-    cbor_serialize_extending_bytes(object, &mut data)?;
-    Ok(data)
-}
-
 pub fn cbor_deserialize<'de, T: serde::Deserialize<'de>>(buffer: &'de [u8]) -> Result<T> {
     // cortex_m_semihosting::hprintln!("deserializing {:?}", buffer).ok();
     de::from_bytes(buffer)
