@@ -15,7 +15,7 @@ pub enum Error {
     /// This is a feature that cbor-smol intends to support, but does not yet
     NotYetImplemented,
     /// The serialize buffer is full
-    SerializeBufferFull(usize),
+    SerializeBufferFull,
     // /// The length of a sequence must be known
     // SerializeSeqLengthUnknown,
     /// Hit the end of buffer, expected more data
@@ -78,7 +78,7 @@ impl Display for Error {
                 NotYetImplemented => {
                     "This is a feature that cbor-smol intends to support, but does not yet"
                 }
-                SerializeBufferFull(i) => "The serialize buffer is full",
+                SerializeBufferFull => "The serialize buffer is full",
                 // SerializeSeqLengthUnknown => "The length of a sequence must be known",
                 DeserializeUnexpectedEnd => "Hit the end of buffer, expected more data",
                 // DeserializeBadVarint => {

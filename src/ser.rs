@@ -20,7 +20,7 @@ impl<'a> Writer for &'a mut [u8] {
         let l = buf.len();
         if self.len() < l {
             // This buffer will not fit in our slice
-            return Err(Error::SerializeBufferFull(0));
+            return Err(Error::SerializeBufferFull);
         }
         let (current, rem) = mem::take(self).split_at_mut(l);
         current.copy_from_slice(buf);
@@ -34,7 +34,7 @@ impl<const N: usize> Writer for heapless_bytes_v0_3::Bytes<N> {
     type Error = Error;
     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
         self.extend_from_slice(buf)
-            .or(Err(Error::SerializeBufferFull(self.len())))
+            .or(Err(Error::SerializeBufferFull))
     }
 }
 
@@ -43,7 +43,7 @@ impl<const N: usize> Writer for heapless_bytes_v0_4::Bytes<N> {
     type Error = Error;
     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
         self.extend_from_slice(buf)
-            .or(Err(Error::SerializeBufferFull(self.len())))
+            .or(Err(Error::SerializeBufferFull))
     }
 }
 
@@ -52,7 +52,7 @@ impl<const N: usize> Writer for heapless_v0_7::Vec<u8, N> {
     type Error = Error;
     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
         self.extend_from_slice(buf)
-            .or(Err(Error::SerializeBufferFull(self.len())))
+            .or(Err(Error::SerializeBufferFull))
     }
 }
 
@@ -61,7 +61,7 @@ impl<const N: usize> Writer for heapless_v0_8::Vec<u8, N> {
     type Error = Error;
     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
         self.extend_from_slice(buf)
-            .or(Err(Error::SerializeBufferFull(self.len())))
+            .or(Err(Error::SerializeBufferFull))
     }
 }
 

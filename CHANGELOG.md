@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]: https://github.com/trussed-dev/cbor-smol/compare/0.5.0...HEAD
 
--
+### Changed
+
+- Remove `usize` value from `Error::SerializeBufferFull` variant
 
 ## [0.5.0][] - 2024-10-21
 
