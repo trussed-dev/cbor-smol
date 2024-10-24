@@ -166,7 +166,7 @@
     <span class="doccomment">/// This is a feature that cbor-smol intends to support, but does not yet
     </span>NotYetImplemented,
     <span class="doccomment">/// The serialize buffer is full
-    </span>SerializeBufferFull(usize),
+    </span>SerializeBufferFull,
     <span class="comment">// /// The length of a sequence must be known
     // SerializeSeqLengthUnknown,
     </span><span class="doccomment">/// Hit the end of buffer, expected more data
@@ -229,7 +229,7 @@
                 NotYetImplemented =&gt; {
                     <span class="string">"This is a feature that cbor-smol intends to support, but does not yet"
                 </span>}
-                SerializeBufferFull(i) =&gt; <span class="string">"The serialize buffer is full"</span>,
+                SerializeBufferFull =&gt; <span class="string">"The serialize buffer is full"</span>,
                 <span class="comment">// SerializeSeqLengthUnknown =&gt; "The length of a sequence must be known",
                 </span>DeserializeUnexpectedEnd =&gt; <span class="string">"Hit the end of buffer, expected more data"</span>,
                 <span class="comment">// DeserializeBadVarint =&gt; {

@@ -630,7 +630,7 @@
         <span class="kw">let </span>l = buf.len();
         <span class="kw">if </span><span class="self">self</span>.len() &lt; l {
             <span class="comment">// This buffer will not fit in our slice
-            </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::SerializeBufferFull(<span class="number">0</span>));
+            </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::SerializeBufferFull);
         }
         <span class="kw">let </span>(current, rem) = mem::take(<span class="self">self</span>).split_at_mut(l);
         current.copy_from_slice(buf);
@@ -644,7 +644,7 @@
     <span class="kw">type </span>Error = Error;
     <span class="kw">fn </span>write_all(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.extend_from_slice(buf)
-            .or(<span class="prelude-val">Err</span>(Error::SerializeBufferFull(<span class="self">self</span>.len())))
+            .or(<span class="prelude-val">Err</span>(Error::SerializeBufferFull))
     }
 }
 
@@ -653,7 +653,7 @@
     <span class="kw">type </span>Error = Error;
     <span class="kw">fn </span>write_all(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.extend_from_slice(buf)
-            .or(<span class="prelude-val">Err</span>(Error::SerializeBufferFull(<span class="self">self</span>.len())))
+            .or(<span class="prelude-val">Err</span>(Error::SerializeBufferFull))
     }
 }
 
@@ -662,7 +662,7 @@
     <span class="kw">type </span>Error = Error;
     <span class="kw">fn </span>write_all(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.extend_from_slice(buf)
-            .or(<span class="prelude-val">Err</span>(Error::SerializeBufferFull(<span class="self">self</span>.len())))
+            .or(<span class="prelude-val">Err</span>(Error::SerializeBufferFull))
     }
 }
 
@@ -671,7 +671,7 @@
     <span class="kw">type </span>Error = Error;
     <span class="kw">fn </span>write_all(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.extend_from_slice(buf)
-            .or(<span class="prelude-val">Err</span>(Error::SerializeBufferFull(<span class="self">self</span>.len())))
+            .or(<span class="prelude-val">Err</span>(Error::SerializeBufferFull))
     }
 }
 
