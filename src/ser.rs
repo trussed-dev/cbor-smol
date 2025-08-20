@@ -47,6 +47,17 @@ impl<const N: usize> Writer for heapless_bytes_v0_4::Bytes<N> {
     }
 }
 
+#[cfg(feature = "heapless-bytes-v0-5")]
+impl<S: heapless_bytes_v0_5::BytesStorage + ?Sized, LenT: heapless_v0_9::LenType> Writer
+    for heapless_bytes_v0_5::BytesInner<LenT, S>
+{
+    type Error = Error;
+    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+        self.extend_from_slice(buf)
+            .or(Err(Error::SerializeBufferFull))
+    }
+}
+
 #[cfg(feature = "heapless-v0-7")]
 impl<const N: usize> Writer for heapless_v0_7::Vec<u8, N> {
     type Error = Error;
@@ -65,7 +76,18 @@ impl<const N: usize> Writer for heapless_v0_8::Vec<u8, N> {
     }
 }
 
-impl<'a, T: Writer> Writer for &'a mut T {
+#[cfg(feature = "heapless-v0-9")]
+impl<S: heapless_v0_9::vec::VecStorage<u8> + ?Sized, LenT: heapless_v0_9::LenType> Writer
+    for heapless_v0_9::vec::VecInner<u8, LenT, S>
+{
+    type Error = Error;
+    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+        self.extend_from_slice(buf)
+            .or(Err(Error::SerializeBufferFull))
+    }
+}
+
+impl<'a, T: Writer + ?Sized> Writer for &'a mut T {
     type Error = T::Error;
     fn write_all(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
         (**self).write_all(buf)
