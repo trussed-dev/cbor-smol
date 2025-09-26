@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/trussed-dev/cbor-smol/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/trussed-dev/cbor-smol/compare/0.5.1...HEAD
+
+## [0.5.1][] - 2025-09-26
 
 ### Changed
 
 - Remove `usize` value from `Error::SerializeBufferFull` variant
+- Add support for `heapless` version 0.9
+- Migrate to serde-core 
+
+[0.5.1]: https://github.com/trussed-dev/cbor-smol/compare/0.5.0...0.5.1
 
 ## [0.5.0][] - 2024-10-21
 
