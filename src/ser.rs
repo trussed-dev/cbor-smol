@@ -16,7 +16,7 @@ pub trait Writer {
     fn write_all(&mut self, buf: &[u8]) -> Result<(), Self::Error>;
 }
 
-impl<'a> Writer for &'a mut [u8] {
+impl Writer for &mut [u8] {
     type Error = Error;
     fn write_all(&mut self, buf: &[u8]) -> Result<()> {
         let l = buf.len();
@@ -89,7 +89,7 @@ impl<S: heapless_v0_9::vec::VecStorage<u8> + ?Sized, LenT: heapless_v0_9::LenTyp
     }
 }
 
-impl<'a, T: Writer + ?Sized> Writer for &'a mut T {
+impl<T: Writer + ?Sized> Writer for &mut T {
     type Error = T::Error;
     fn write_all(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
         (**self).write_all(buf)
@@ -454,7 +454,7 @@ where
     }
 }
 
-impl<'a, W> ser::SerializeTuple for &'a mut Serializer<W>
+impl<W> ser::SerializeTuple for &mut Serializer<W>
 where
     W: Writer,
 {
@@ -475,7 +475,7 @@ where
     }
 }
 
-impl<'a, W> ser::SerializeTupleStruct for &'a mut Serializer<W>
+impl<W> ser::SerializeTupleStruct for &mut Serializer<W>
 where
     W: Writer,
 {
@@ -496,7 +496,7 @@ where
     }
 }
 
-impl<'a, W> ser::SerializeTupleVariant for &'a mut Serializer<W>
+impl<W> ser::SerializeTupleVariant for &mut Serializer<W>
 where
     W: Writer,
 {
@@ -517,7 +517,7 @@ where
     }
 }
 
-impl<'a, W> ser::SerializeStruct for &'a mut Serializer<W>
+impl<W> ser::SerializeStruct for &mut Serializer<W>
 where
     W: Writer,
 {
@@ -540,7 +540,7 @@ where
     }
 }
 
-impl<'a, W> ser::SerializeStructVariant for &'a mut Serializer<W>
+impl<W> ser::SerializeStructVariant for &mut Serializer<W>
 where
     W: Writer,
 {
