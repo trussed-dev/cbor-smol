@@ -1,6 +1,7 @@
 #![allow(unused_variables)]
 
 use core::fmt::{Display, Formatter};
+use serde_core as serde;
 
 /// This is the Result type used by cbor-smol.
 pub type Result<T, Err = Error> = core::result::Result<T, Err>;

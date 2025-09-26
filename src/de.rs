@@ -1,6 +1,8 @@
-use serde::Deserialize;
+use core::convert::TryInto;
 
-use serde::de::IntoDeserializer;
+use serde_core as serde;
+
+use serde::de::{self, Deserialize, DeserializeSeed, IntoDeserializer, Visitor};
 
 use super::error::{Error, Result};
 use crate::consts::*;
@@ -28,14 +30,6 @@ where
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// TODO: remove these allowances again later
-// #![allow(unused_imports)]
-// #![allow(unused_variables)]
-
-use core::convert::TryInto;
-
-use serde::de::{self, DeserializeSeed, Visitor};
 
 /// A structure for deserializing a cbor-smol message.
 pub struct Deserializer<'de> {

@@ -1,6 +1,8 @@
 use super::error::{Error, Result};
-use serde::ser;
-use serde::Serialize;
+
+use serde_core as serde;
+
+use serde::ser::{self, Serialize};
 
 use core::mem;
 

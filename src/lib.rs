@@ -4,6 +4,8 @@
 extern crate delog;
 generate_macros!();
 
+use serde_core as serde;
+
 pub(crate) mod consts;
 pub mod de;
 pub mod error;
