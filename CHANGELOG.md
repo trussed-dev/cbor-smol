@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/trussed-dev/cbor-smol/compare/0.5.1...HEAD
+[Unreleased]: https://github.com/trussed-dev/cbor-smol/compare/0.5.2...HEAD
+
+## [0.5.2][] - 2025-11-14
 
 - Make the `delog` dependency optional
+
+[0.5.2]: https://github.com/trussed-dev/cbor-smol/compare/0.5.1...0.5.2
 
 ## [0.5.1][] - 2025-09-26
 
