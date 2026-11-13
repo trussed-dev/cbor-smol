@@ -1,0 +1,22 @@
+name: Continuous delivery - crates.io
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: crates.io
+    permissions:
+      id-token: write
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: true
+    - uses: rust-lang/crates-io-auth-action@v1
+      id: auth
+    - run: cargo publish
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
