@@ -27,6 +27,18 @@ pub fn cbor_serialize_to<T: ?Sized + serde::Serialize, W: Writer>(
     Ok(serializer.written())
 }
 
+/// Serialize an object to a new `Writer`.
+///
+/// This function constructs a new writer using [`Default`][], serializes the object and returns
+/// the writer.
+pub fn cbor_serialize_to_new<T: ?Sized + serde::Serialize, W: Default + Writer>(
+    object: &T,
+) -> Result<W> {
+    let mut writer = W::default();
+    cbor_serialize_to(object, &mut writer)?;
+    Ok(writer)
+}
+
 // kudos to postcard, this is much nicer than returning size
 pub fn cbor_serialize<'a, T: ?Sized + serde::Serialize>(
     object: &T,
