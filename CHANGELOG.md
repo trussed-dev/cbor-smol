@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+-
+
+[Unreleased]: https://github.com/trussed-dev/cbor-smol/compare/0.5.3...HEAD
+
+## [0.5.3][] - 2026-11-19
+
 - Add `cbor_serialize_to_new` function
 
-[Unreleased]: https://github.com/trussed-dev/cbor-smol/compare/0.5.2...HEAD
+[0.5.3]: https://github.com/trussed-dev/cbor-smol/compare/0.5.2...0.5.3
 
 ## [0.5.2][] - 2025-11-14
 
